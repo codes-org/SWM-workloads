@@ -1,0 +1,47 @@
+{
+    
+    #
+    # Nearest Neighbor SWM
+    # Author(s): john.d.thompson@intel.com
+    # Reference(s):
+    #   https://securewiki.ith.intel.com/display/STLPerfMod/Nearest+Neighbor+SWM
+    #   https://securewiki.ith.intel.com/dosearchsite.action?searchQuery.queryString=ancestorIds%3A174101712+AND+nearest+neighbor&searchQuery.spaceKey=STLPerfMod
+    #
+
+    # path to the nearest neighbor dll
+    "dll_path": "${FABSIM_APPS_PATH}/dll/nearest_neighbor.so",
+
+    # configure this instance of the nearest neighbor application
+    "cfg": {
+
+        # used for sanity checking
+        "app": "nearest_neighbor",
+
+        # the number of iterations to run -- one iteration includes a {send,recv} from each neighbor
+        "iteration_cnt": 1, 
+
+        # a computation delay incurred at the end of each iteration
+        # disabled if we are in synchronous mode
+        "compute_delay": 0,
+
+        # a number of noops incurred after each indivdual neighbor {send,recv} exchange
+        "noop_cnt": 0,
+
+        # number of dimensions in the problem
+        "dimension_cnt": 3,
+
+        # size of each dimension
+        "dimension_sizes": [16,16,24],
+
+        # how many dimensions away we'll consider a neighbor to be in
+        # we only consider neighbors one-away in any dimension
+        "max_dimension_distance": 3,
+
+        # defines whether or not we synchronize at the end of each iteration
+        "synchronous": true,
+
+        # when set, each randomizes the order of neighbor exchanges on every iteration
+        "randomize_communication_order": 1
+
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "jobs": [
+        {
+            "name": "StandaloneSWM",
+            "app": "dll",
+            "dll_path": "apps/dll/lammps.so",      
+            "size": 128,
+            "time": 0,
+            "cfg":
+            { 
+                "num_x_replicas": 1,     # number of replicas in X dimension
+                "num_y_replicas": 1,     # number of replicas in Y dimension
+                "num_z_replicas": 1,     # number of replicas in Z dimension
+                "num_time_steps": 30,   # number of time steps to simulate
+                "req_vc" : 0,            # request vc
+                "resp_vc" : 1,           # response vc
+                "router_freq" : 800e6,   # router frequency in Hz
+                "cpu_freq" : 1.2e9,      # CPU frequency in Hz
+                "cpu_sim_speedup" : 1e6  # simulation speedup factor (makes CPU faster) (use this to shorten computation periods)
+            }
+        }
+    ]
+}

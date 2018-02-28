@@ -1,0 +1,6 @@
+#
+# Output dist version
+#
+.phony: distversion
+distversion:@echo $(VERSION)
+

@@ -1,0 +1,13 @@
+prefix=/Users/mmubarak/Documents/software_development/workloads/swm/install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: swm
+Description: Online workloads for CORAL applications
+Version: 0.1
+URL: git@xgitlab.cels.anl.gov:mubarak/workloads.git
+Requires: 
+Libs: -L${libdir} -lswm
+Cflags: -I${includedir}
+

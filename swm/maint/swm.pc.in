@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+datarootdir=@exec_prefix@/share
+
+Name: swm
+Description: Online workloads for CORAL applications
+Version: 0.1
+URL: git@xgitlab.cels.anl.gov:mubarak/workloads.git
+Requires: 
+Libs: -L${libdir} -lswm
+Cflags: -I${includedir}

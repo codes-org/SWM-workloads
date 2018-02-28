@@ -1,0 +1,18 @@
+include_HEADERS = \
+				  		 src/swm-include.h \
+						 src/lammps/lammps.h \
+						 src/lammps/lammps_model.h \
+						 src/nekbone/nekbone_swm_user_code.h \
+						 src/nekbone/triplet.h	\
+						 src/nekbone/cubiclattice.h
+
+src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
+						src/nekbone/cubiclattice.cpp	\
+						src/nekbone/nekbone_swm_user_code.cpp
+
+dist_data_DATA = src/lammps/lammps_workload.json \
+			  src/nearest_neighbor/skeleton.json \
+			  src/nekbone/workload.json \
+			  src/point_to_point/example.json
+
+				

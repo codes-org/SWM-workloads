@@ -1,0 +1,19 @@
+{
+    "jobs": [
+        {
+            "name": "job1",
+            "app":  "point_to_point",
+            "size": 128,
+            "time": 0,
+            "cfg": { 
+                "iteration_cnt":    1,
+                "num_vcs":          8,
+                "msg_req_bytes":    2,
+                "msg_rsp_bytes":    8000,
+                "pkt_rsp_bytes":    0,
+                "src_rank_id":      0,
+                "dst_rank_id":      1
+            }
+        }
+    ]
+}

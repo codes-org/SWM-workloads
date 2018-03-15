@@ -4,11 +4,13 @@
 extern uint64_t global_cycle;
 
 NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
-    SWMUserIF* user_if,
     boost::property_tree::ptree cfg,
     void**& generic_ptrs
 ) :
-    AppBaseSWMUserCode(user_if,cfg,"nearest_neighbor"),
+    process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
+    iteration_cnt(cfg.get<uint32_t>("jobs.iteration_cnt", 1)),
+    noop_cnt(cfg.get<uint32_t>("jobs.noop_cnt", 1)),
+    compute_delay(cfg.get<uint32_t>("jobs.compute_delay", 1)),
     dimension_cnt(cfg.get<uint32_t>("dimension_cnt",0)),
     dimension_sizes(boost_ptree_array_to_std_vector<uint32_t>(cfg,"dimension_sizes", {0})),
                 max_dimension_distance(cfg.get<uint32_t>("max_dimension_distance",0)),
@@ -17,6 +19,7 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
                 randomize_communication_order(cfg.get<bool>("randomize_communication_order",false))
 {
 
+    process_id = *((int*)generic_ptrs[0]);
     assert(dimension_sizes.size() == dimension_cnt);
 
     size_t dim_product = 1;
@@ -151,7 +154,7 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
         std::string regexed_string = GetFirstMatch(neighbor_string);
         //std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
-        neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
+        neighbors.push_back( boost::make_tuple(neighbor_pid,regexed_string) );
 
         return;
     }
@@ -166,7 +169,7 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
             std::string regexed_string = GetFirstMatch(neighbor_string);
             //std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
-            neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
+            neighbors.push_back( boost::make_tuple(neighbor_pid,regexed_string) );
         }
         return;
     }
@@ -286,9 +289,9 @@ NearestNeighborSWMUserCode::call()
         for(size_t neighbor_idx=0; neighbor_idx<neighbors.size(); neighbor_idx++)
         {
 
-            msg_traffic_desc msg_desc;
+            //msg_traffic_desc msg_desc;
 
-            GetMsgDetails(&msg_desc, std::get<1>(neighbors[neighbor_idx]));
+            //GetMsgDetails(&msg_desc, std::get<1>(neighbors[neighbor_idx]));
 
             if(synchronous)
             {
@@ -299,8 +302,8 @@ NearestNeighborSWMUserCode::call()
                     std::get<0>(neighbors[neighbor_idx]),
                     SWM_COMM_WORLD,
                     process_id,
-                    msg_desc.msg_req_vc,
-                    msg_desc.msg_rsp_vc,
+                    0, // MM additions
+                    1, // MM additions
                     NO_BUFFER,
                     msg_desc.msg_req_bytes,
                     msg_desc.pkt_rsp_bytes,

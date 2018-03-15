@@ -19,10 +19,15 @@
 #ifndef _NEAREST_NEIGHBOR_TEMPLATE_USER_CODE_
 #define _NEAREST_NEIGHBOR_TEMPLATE_USER_CODE_
 
-#include "app_base_swm_user_code.h"
+#include <boost/property_tree/ptree.hpp>
 #include <string>
+#include <iostream>
+#include <vector>
+#include "swm-include.h"
 
-typedef std::tuple<uint32_t, std::string> neighbor_tuple;
+using namespace std;
+
+typedef boost::tuple<uint32_t, std::string> neighbor_tuple;
 
 /*
 struct neighbor {
@@ -31,13 +36,12 @@ struct neighbor {
 };
 */
 
-class NearestNeighborSWMUserCode : public AppBaseSWMUserCode
+class NearestNeighborSWMUserCode
 {
 
 public:
 
     NearestNeighborSWMUserCode(
-        SWMUserIF* user_if,
         boost::property_tree::ptree cfg,
         void**& generic_ptrs
     );
@@ -57,9 +61,15 @@ public:
     void call();
 
 protected:
+    uint32_t process_cnt; // MM addition
     uint32_t request_vc;
     uint32_t response_vc;
     uint32_t message_size;
+    uint32_t message_size;
+    uint32_t iteration_cnt; //MM addition
+    uint32_t noop_cnt; //MM addition
+    uint32_t compute_delay; //MM addition
+    int process_id; //MM addition
 
     uint32_t dimension_cnt;
     std::vector<uint32_t> dimension_sizes;
@@ -68,8 +78,8 @@ protected:
     uint32_t iterations_per_sync;
     bool randomize_communication_order;
 
-    RoutingType req_rt;
-    RoutingType rsp_rt;
+    //RoutingType req_rt;
+    //RoutingType rsp_rt;
 
     //std::vector<uint32_t> neighbors; //we'll encode each dimension as 0, 1, or 2 in 2-bit aligned quantities
     std::vector<neighbor_tuple> neighbors; //we'll encode each dimension as 0, 1, or 2 in 2-bit aligned quantities

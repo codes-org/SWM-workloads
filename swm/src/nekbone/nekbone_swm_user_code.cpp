@@ -31,6 +31,8 @@ NEKBONESWMUserCode::NEKBONESWMUserCode(
     CGcount(cfg.get<uint32_t>("jobs.cfg.CGcount", 1)),
     NeighborCount(cfg.get<uint32_t>("jobs.cfg.NeighborCount", 1)),
     ByteSizeOf1DOF(cfg.get<uint32_t>("jobs.cfg.ByteSizeOf1DOF", 1)),
+    cpu_freq(cfg.get<double>("jobs.cfg.cpu_freq", 1.2e9)),
+    cpu_sim_speedup(cfg.get<double>("jobs.cfg.cpu_sim_speedup", 1.0)),
     check_finalize(0), mpiRank(0),
     partR(), partE(), partP(), globPartR(), globPartE(), globPartP()
 {

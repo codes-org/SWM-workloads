@@ -60,6 +60,8 @@ protected:
     /*MM additions */
     uint32_t process_cnt;
     int process_id;
+    double cpu_freq;        // CPU frequency in Hz
+    double cpu_sim_speedup; // simulation speedup factor (makes CPU faster)
 private:
     //struct neighborLoad does the following
     //  For the current rank this->mpiRank, it haa to send "load" bytes

@@ -1,5 +1,6 @@
 #include <time.h>
 #include <math.h>
+#include <inttypes.h>
 
 #include "lammps.h"
 
@@ -494,7 +495,7 @@ LAMMPS_SWM::ghost_setup(double cutoff, int rank, double t_vol)
     gh_fw_s_sizes = new int[gh_fw_len];
     gh_fw_cyc = new long[gh_fw_len];
 
-    printf("\n Rank id %d gh_fw_len %d ", rank, gh_fw_len);
+//    printf("\n Rank id %d gh_fw_len %d ", rank, gh_fw_len);
     // receive targets
     rank_to_neigh(rank, neigh);
     ni = 0;
@@ -716,7 +717,13 @@ LAMMPS_SWM::k_pre_setup(double cutoff, int rank, double f_vol)
     int rs[3];
     int coord[3];
 
-    for(i = 0; i < 3; i++) assert(int(cutoff / (prd[i] / procNums[i]) + 1) == 1);
+    //printf("\n proc[0] %d proc[1] %d proc[2] %d ", procNums[0], procNums[1], procNums[2]);
+    //printf("\n proc[0] %f proc[1] %f proc[2] %f cutoff %f ", prd[0], prd[1], prd[2], cutoff);
+    for(i = 0; i < 3; i++) 
+    {
+//        printf("\n cutoff %f prd[%d] %f procNums[%d] %d ", cutoff, i, prd[i], i, procNums[i]);
+        assert(int(cutoff / (prd[i] / procNums[i]) + 1) == 1);
+    }
     k_pre_len = 6;
 
     k_pre_r_targets = new int[k_pre_len];
@@ -814,6 +821,7 @@ LAMMPS_SWM::k_pre_setup(double cutoff, int rank, double f_vol)
     assert( (int)(abs(lo_out - lo_in) + 2) <=
             ((int)pppmGrid[0]/procNums[0] + (int)(double)((int)pppmGrid[0]%procNums[0])/procNums[0]*(coord[0]+1)) );
 
+    printf("\n lo_out-lo_in %d down-val %d ", lo_out - lo_in, (int)pppmGrid[0]/procNums[0] + (int)(double)((int)pppmGrid[0]%procNums[0])/procNums[0]*(coord[0]+1));
 
     for(i = 0; i < k_pre_len; i++) k_pre_s_sizes[i] = int(k_pre_s_sizes[i] * msg_k_pre + 0.5);
 
@@ -1075,6 +1083,7 @@ LAMMPS_SWM::get_k_params(int rank, double f_vol)
 
     n_tr = 0;
     find_overlap(nx_in, 0, nx_fft, 0, rank, r_r, &r_len, s_r, s_rs, &s_len);
+    printf("\n r_len %d s_len %d rank %d ", r_len, s_len, rank);
     assert(r_len == s_len);
     assert(n_tr < NUM_TRANSPOSE);
     k_r_targets[n_tr] = new int[r_len];
@@ -1238,13 +1247,16 @@ LAMMPS_SWM::find_overlap(int all_in[], int in_shift, int all_out[], int out_shif
 
         if(find_one_overlap(&all_in[rank*10+in_shift], &all_out[r*10+out_shift], s))
         {
+            //printf("\n s_len is %d ", *s_len);
             s_r[*s_len] = r;
             s_rs[*s_len] = s[0] * s[1] *s[2];
             (*s_len)++;
         }
 
+        //printf("\n r is %d ", r);
         if(find_one_overlap(&all_in[r*10+in_shift], &all_out[rank*10+out_shift], s))
         {
+            //printf("\n r_len is %d ", r*10+in_shift);
             r_r[*r_len] = r;
             (*r_len)++;
         }

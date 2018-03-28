@@ -23,7 +23,7 @@
                 "Pstep" : 3,
                 "CGcount" : 100,
                 "NeighborCount" : 26,
-                "ByteSizeOf1DOF" : 8
+                "ByteSizeOf1DOF" : 8,
                 "cpu_freq" : 4e9,
                 "cpu_sim_speedup" : 1e6 
             }

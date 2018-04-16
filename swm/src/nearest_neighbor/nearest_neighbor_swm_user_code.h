@@ -20,8 +20,12 @@
 #define _NEAREST_NEIGHBOR_TEMPLATE_USER_CODE_
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 #include <string>
 #include <iostream>
+#include <random>
+#include <algorithm>
 #include <vector>
 #include "swm-include.h"
 
@@ -64,7 +68,6 @@ protected:
     uint32_t process_cnt; // MM addition
     uint32_t request_vc;
     uint32_t response_vc;
-    uint32_t message_size;
     uint32_t message_size;
     uint32_t iteration_cnt; //MM addition
     uint32_t noop_cnt; //MM addition

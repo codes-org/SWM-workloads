@@ -1,8 +1,22 @@
+
 #include "nearest_neighbor_swm_user_code.h"
 #include "boost_ptree_array_to_std_vector.h"
-
 extern uint64_t global_cycle;
 
+std::string GetFirstMatch(std::string lookup_name)
+{
+        for(size_t s=0; s<msg_traffic_def_vector.size(); s++) {
+                    std::regex re(msg_traffic_def_vector[s]->regex_string);
+                     if(std::regex_match(lookup_name,re))
+                                        {
+                                                            return
+                                                            msg_traffic_def_vector[s]->name;
+                                                                    }
+                                                                        }
+                                                                            assert(0);
+
+}
+                                                                            
 NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     boost::property_tree::ptree cfg,
     void**& generic_ptrs
@@ -281,8 +295,8 @@ NearestNeighborSWMUserCode::call()
         //shuffle the neighbors
         if(randomize_communication_order)
         {
-            std::default_random_engine e {rng_unique_seed->Get(INT_MAX)};
-            std::shuffle(neighbors.begin(), neighbors.end(), e);
+//            auto rng = std::default_random_engine {};
+            std::random_shuffle(neighbors.begin(), neighbors.end());
         }
 
         //send to each neighbor
@@ -308,8 +322,8 @@ NearestNeighborSWMUserCode::call()
                     msg_desc.msg_req_bytes,
                     msg_desc.pkt_rsp_bytes,
                     &(send_handles[neighbor_idx+iter_before_sync*neighbors_size]),
-                    msg_desc.msg_req_routing_type,
-                    msg_desc.msg_rsp_routing_type
+                    0,
+                    0
                 );
 
                 SWM_Irecv(
@@ -332,9 +346,9 @@ NearestNeighborSWMUserCode::call()
 
                 SWM_Synthetic(
                     std::get<0>(neighbors[neighbor_idx]),  //dst
-                    msg_desc.msg_req_vc,
-                    msg_desc.msg_rsp_vc,
-                    msg_desc.pkt_rsp_vc,
+                    0,
+                    0,
+                    0,
                     msg_desc.msg_req_bytes,
                     msg_desc.msg_rsp_bytes,
                     msg_desc.pkt_rsp_bytes,

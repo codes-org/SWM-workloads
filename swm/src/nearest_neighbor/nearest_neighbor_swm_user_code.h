@@ -22,16 +22,21 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+
 #include <string>
 #include <iostream>
 #include <random>
 #include <algorithm>
 #include <vector>
+#include <regex>
+
 #include "swm-include.h"
 
 using namespace std;
 
 typedef boost::tuple<uint32_t, std::string> neighbor_tuple;
+
+typedef uint32_t RoutingType;
 
 /*
 struct neighbor {
@@ -39,6 +44,63 @@ struct neighbor {
     uint32_t neighbor_pid;
 };
 */
+
+// MM: This msg traffic code is part of the base swm class
+
+typedef struct msg_traffic_desc {
+
+  //SWMMessageAttribute attribute;
+
+  RoutingType msg_req_routing_type;
+  RoutingType msg_rsp_routing_type;
+  RoutingType pkt_rsp_routing_type;
+
+  std::vector<uint32_t> msg_req_bytess;
+  std::vector<uint32_t> msg_rsp_bytess;
+  std::vector<uint32_t> pkt_rsp_bytess;
+
+  uint32_t msg_req_bytes;
+  uint32_t msg_rsp_bytes;
+  uint32_t pkt_rsp_bytes;
+
+
+  std::vector<uint32_t> msg_req_vcs;
+  std::vector<uint32_t> msg_rsp_vcs;
+  std::vector<uint32_t> pkt_rsp_vcs;
+
+  uint32_t msg_req_vc;
+  uint32_t msg_rsp_vc;
+  uint32_t pkt_rsp_vc;
+  
+  /*
+  #ifdef FABSIM_EMULATION
+  stl_l2_encoding l2_encoding;
+  std::vector<uint32_t> dlid_xors;
+  
+  uint32_t dlid_xor;
+  #endif
+  */
+  
+} msg_traffic_desc;
+
+
+struct msg_traffic_set
+{
+  std::vector < std::tuple < uint32_t, msg_traffic_desc > > set;
+  uint32_t msg_parts_sum;
+  std::string name;
+  std::string regex_string;
+
+public:
+  msg_traffic_set(std::string name, std::string regex_string)
+  :
+  msg_parts_sum(0),
+    name(name),
+    regex_string(regex_string)
+  {}
+};
+
+std::vector<msg_traffic_set*> msg_traffic_def_vector; // MM addition: normally part of base class
 
 class NearestNeighborSWMUserCode
 {
@@ -72,8 +134,11 @@ protected:
     uint32_t iteration_cnt; //MM addition
     uint32_t noop_cnt; //MM addition
     uint32_t compute_delay; //MM addition
+    uint32_t msg_size; // MM addition
     int process_id; //MM addition
-
+    int req_rt; // MM addition
+    int rsp_rt; // MM addition
+    
     uint32_t dimension_cnt;
     std::vector<uint32_t> dimension_sizes;
     uint32_t max_dimension_distance;

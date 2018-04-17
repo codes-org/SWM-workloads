@@ -26,6 +26,7 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     noop_cnt(cfg.get<uint32_t>("jobs.noop_cnt", 1)),
     compute_delay(cfg.get<uint32_t>("jobs.compute_delay", 1)),
     dimension_cnt(cfg.get<uint32_t>("dimension_cnt",0)),
+    msg_size(cfg.get<uint32_t>("msg_size", 0)),
     dimension_sizes(boost_ptree_array_to_std_vector<uint32_t>(cfg,"dimension_sizes", {0})),
                 max_dimension_distance(cfg.get<uint32_t>("max_dimension_distance",0)),
                 synchronous(cfg.get<bool>("synchronous",false)),
@@ -44,6 +45,8 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     std::cout << "dim_product is " << dim_product << " and process_cnt is " << process_cnt << std::endl;
     assert(dim_product == process_cnt);
 
+    req_rt = AUTOMATIC;
+    rsp_rt = AUTOMATIC;
 
 }
 
@@ -289,6 +292,8 @@ NearestNeighborSWMUserCode::call()
 
     uint32_t iter_before_sync = 0;
     uint32_t neighbors_size=neighbors.size();
+    uint32_t pkt_rsp_bytes = 0;
+    
     for(uint32_t iter=0; iter<iteration_cnt; iter++)
     {
 
@@ -313,29 +318,30 @@ NearestNeighborSWMUserCode::call()
                 //send/recv pair that we'll later wait on
 
                 SWM_Isend(
-                    std::get<0>(neighbors[neighbor_idx]),
+                    boost::get<0>(neighbors[neighbor_idx]),
                     SWM_COMM_WORLD,
                     process_id,
                     0, // MM additions
                     1, // MM additions
                     NO_BUFFER,
-                    msg_desc.msg_req_bytes,
-                    msg_desc.pkt_rsp_bytes,
+                    msg_size, //msg_desc.msg_req_bytes,
+                    pkt_rsp_bytes, //msg_desc.pkt_rsp_bytes,
                     &(send_handles[neighbor_idx+iter_before_sync*neighbors_size]),
                     0,
                     0
                 );
 
                 SWM_Irecv(
-                    std::get<0>(neighbors[neighbor_idx]),
+                    boost::get<0>(neighbors[neighbor_idx]),
                     SWM_COMM_WORLD,
-                    std::get<0>(neighbors[neighbor_idx]),
+                    boost::get<0>(neighbors[neighbor_idx]),
                     NO_BUFFER,
                     &(recv_handles[neighbor_idx+iter_before_sync*neighbors_size])
                 );
                 for(uint32_t noop=0; noop<noop_cnt; noop++)
                 {
-                    SWM_Noop();
+		  assert(0); // Does CODES have an equivalent of a NOOP?
+		  //SWM_Noop();
                 }
 
             }
@@ -343,20 +349,22 @@ NearestNeighborSWMUserCode::call()
             {
 
                 //fire and forget
-
+	      // purposes of the paper lets just use Isend/Irecv
+	      assert(0);
+	      /*
                 SWM_Synthetic(
                     std::get<0>(neighbors[neighbor_idx]),  //dst
                     0,
                     0,
                     0,
-                    msg_desc.msg_req_bytes,
-                    msg_desc.msg_rsp_bytes,
-                    msg_desc.pkt_rsp_bytes,
-                    msg_desc.msg_req_routing_type,
-                    msg_desc.msg_rsp_routing_type,
-                    msg_desc.pkt_rsp_routing_type,
+                    msg_size, //msg_desc.msg_req_bytes,
+                    0, //msg_desc.msg_rsp_bytes,
+                    pkt_rsp_bytes, //msg_desc.pkt_rsp_bytes,
+                    req_rt, //msg_desc.msg_req_routing_type,
+                    rsp_rt, //msg_desc.msg_rsp_routing_type,
+                    rsp_rt, //msg_desc.pkt_rsp_routing_type,
                     NULL,
-                    msg_desc.attribute
+                    NULL, //msg_desc.attribute
 #ifdef FABSIM_EMULATION
                     , msg_desc.l2_encoding
 #endif
@@ -365,6 +373,8 @@ NearestNeighborSWMUserCode::call()
                 {
                     SWM_Noop();
                 }
+
+		*/
 
             }
 

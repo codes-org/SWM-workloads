@@ -17,7 +17,10 @@ BUILT_SOURCES =
 EXTRA_DIST += \
 			   prepare.sh 
 
-AM_CPPFLAGS = -I$(top_srcdir)/src 
+AM_CPPFLAGS = -I$(top_srcdir)/src \
+    $(BOOST_CPPFLAGS)
+
+AM_LDFLAGS = $(BOOST_LDFLAGS)
 
 AM_CFLAGS =
 

@@ -6,6 +6,7 @@ AC_INIT([swm], [0.1], [],[],[])
 AC_CONFIG_MACRO_DIRS([m4])
 LT_INIT
 
+
 AC_CANONICAL_TARGET
 AC_CANONICAL_SYSTEM
 AC_CANONICAL_HOST
@@ -15,6 +16,7 @@ AM_INIT_AUTOMAKE([foreign subdir-objects -Wall])
 # we should remove this soon, only needed for automake 1.10 and older
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+
 AC_CONFIG_SRCDIR([README.md])
 
 # Checks for programs.
@@ -23,6 +25,7 @@ AM_PROG_CC_C_O
 AC_PROG_CXX
 AC_PROG_CXXCPP
 
+AX_CXX_COMPILE_STDCXX(11, noext, mandatory)
 AC_PROG_MKDIR_P
 
 AC_REQUIRE_CPP

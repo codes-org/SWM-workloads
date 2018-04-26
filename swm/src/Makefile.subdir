@@ -10,8 +10,8 @@ include_HEADERS = \
 
 src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
 						src/nekbone/cubiclattice.cpp	\
-						src/nekbone/nekbone_swm_user_code.cpp 
-#src/nearest_neighbor/nearest_neighbor_swm_user_code.cpp
+						src/nekbone/nekbone_swm_user_code.cpp	\
+						src/nearest_neighbor/nearest_neighbor_swm_user_code.cpp
 
 dist_data_DATA = src/lammps/lammps_workload.json \
 			  src/nearest_neighbor/skeleton.json \

@@ -4,8 +4,7 @@
 #include <assert.h>
 #include <iostream>
 
-template <typename T>
-std::vector<T> boost_ptree_array_to_std_vector(boost::property_tree::ptree const& pt, boost::property_tree::ptree::key_type const& key, std::vector<T> def, bool disallow_empty_arrays=true)
+template <typename T> std::vector<T> boost_ptree_array_to_std_vector(boost::property_tree::ptree const& pt, boost::property_tree::ptree::key_type const& key, std::vector<T> def, bool disallow_empty_arrays=true)
 {
    if(pt.count(key)) {
          std::vector<T> r;

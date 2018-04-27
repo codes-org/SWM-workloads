@@ -34,7 +34,7 @@
 
 using namespace std;
 
-typedef boost::tuple<uint32_t, std::string> neighbor_tuple;
+typedef std::tuple<uint32_t, std::string> neighbor_tuple;
 
 typedef uint32_t RoutingType;
 

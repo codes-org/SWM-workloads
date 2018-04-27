@@ -3,17 +3,16 @@
 #include "boost_ptree_array_to_std_vector.h"
 extern uint64_t global_cycle;
 
-std::string GetFirstMatch(std::string lookup_name)
+std::string GetFirstMatch(std::vector<neighbor_tuple>& neighbors, std::string lookup_name)
 {
-        for(size_t s=0; s<msg_traffic_def_vector.size(); s++) {
-                    std::regex re(msg_traffic_def_vector[s]->regex_string);
-                     if(std::regex_match(lookup_name,re))
-                                        {
-                                                            return
-                                                            msg_traffic_def_vector[s]->name;
-                                                                    }
-                                                                        }
-                                                                            assert(0);
+    for(size_t s=0; s<neighbors.size(); s++) {
+         std::regex re(neighbors[s]->regex_string);
+          if(std::regex_match(lookup_name,re))
+          {
+            return neighbors[s]->name;
+          }
+       }
+     assert(0);
 
 }
                                                                             
@@ -22,18 +21,17 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     void**& generic_ptrs
 ) :
     process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
-    iteration_cnt(cfg.get<uint32_t>("jobs.iteration_cnt", 1)),
-    noop_cnt(cfg.get<uint32_t>("jobs.noop_cnt", 1)),
-    compute_delay(cfg.get<uint32_t>("jobs.compute_delay", 1)),
-    dimension_cnt(cfg.get<uint32_t>("dimension_cnt",0)),
-    msg_size(cfg.get<uint32_t>("msg_size", 0)),
-    dimension_sizes(boost_ptree_array_to_std_vector<uint32_t>(cfg,"dimension_sizes", {0})),
-                max_dimension_distance(cfg.get<uint32_t>("max_dimension_distance",0)),
-                synchronous(cfg.get<bool>("synchronous",false)),
-                iterations_per_sync(cfg.get<uint32_t>("iterations_per_sync",1)),
-                randomize_communication_order(cfg.get<bool>("randomize_communication_order",false))
+    iteration_cnt(cfg.get<uint32_t>("jobs.cfg.iteration_cnt", 1)),
+    noop_cnt(cfg.get<uint32_t>("jobs.cfg.noop_cnt", 1)),
+    compute_delay(cfg.get<uint32_t>("jobs.cfg.compute_delay", 1)),
+    dimension_cnt(cfg.get<uint32_t>("jobs.cfg.dimension_cnt",0)),
+    msg_size(cfg.get<uint32_t>("jobs.cfg.msg_size", 0)),
+    dimension_sizes(boost_ptree_array_to_std_vector<uint32_t>(cfg,"jobs.cfg.dimension_sizes", {0})),
+                max_dimension_distance(cfg.get<uint32_t>("jobs.cfg.max_dimension_distance",0)),
+                synchronous(cfg.get<bool>("jobs.cfg.synchronous",false)),
+                iterations_per_sync(cfg.get<uint32_t>("jobs.cfg.iterations_per_sync",1)),
+                randomize_communication_order(cfg.get<bool>("jobs.cfg.randomize_communication_order",false))
 {
-
     process_id = *((int*)generic_ptrs[0]);
     assert(dimension_sizes.size() == dimension_cnt);
 
@@ -77,13 +75,13 @@ NearestNeighborSWMUserCode::xlat_coords_to_pid(
 
     pid=0;
 
-    /*
+    
        std::cout << "xlat_coords_to_pid on coords ";
     for(size_t coords_idx=0; coords_idx<coords.size(); coords_idx++) {
     std::cout << " " << coords[coords_idx];
     }
     std::cout << endl;
-    */
+    
 
     uint32_t dim_mult = 1;
     for(uint32_t dim_idx=0; dim_idx<dimension_cnt; dim_idx++)
@@ -168,10 +166,10 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
         xlat_coords_to_pid(coords, neighbor_pid);
 
         std::string neighbor_string = get_neighbor_string(process_id, neighbor_pid);
-        std::string regexed_string = GetFirstMatch(neighbor_string);
-        //std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
+        std::string regexed_string = GetFirstMatch(neighbors, neighbor_string);
+        std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
-        neighbors.push_back( boost::make_tuple(neighbor_pid,regexed_string) );
+        neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
 
         return;
     }
@@ -183,10 +181,10 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
             xlat_coords_to_pid(coords, neighbor_pid);
 
             std::string neighbor_string = get_neighbor_string(process_id, neighbor_pid);
-            std::string regexed_string = GetFirstMatch(neighbor_string);
-            //std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
+            std::string regexed_string = GetFirstMatch(neighbors, neighbor_string);
+            std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
-            neighbors.push_back( boost::make_tuple(neighbor_pid,regexed_string) );
+            neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
         }
         return;
     }
@@ -245,7 +243,7 @@ void
 NearestNeighborSWMUserCode::call()
 {
 
-    /*
+    
     if(process_id == 0) {   //lets print every pid in coords and back again
     std::vector<uint32_t> coords;
         uint32_t pid_again;
@@ -262,7 +260,7 @@ NearestNeighborSWMUserCode::call()
             std::cout << pid_again << endl;
         }
     }
-    */
+    
 
     std::vector<uint32_t> my_coords;
     std::vector<uint32_t> neighbor_pids;
@@ -318,7 +316,7 @@ NearestNeighborSWMUserCode::call()
                 //send/recv pair that we'll later wait on
 
                 SWM_Isend(
-                    boost::get<0>(neighbors[neighbor_idx]),
+                    std::get<0>(neighbors[neighbor_idx]),
                     SWM_COMM_WORLD,
                     process_id,
                     0, // MM additions
@@ -332,9 +330,9 @@ NearestNeighborSWMUserCode::call()
                 );
 
                 SWM_Irecv(
-                    boost::get<0>(neighbors[neighbor_idx]),
+                    std::get<0>(neighbors[neighbor_idx]),
                     SWM_COMM_WORLD,
-                    boost::get<0>(neighbors[neighbor_idx]),
+                    std::get<0>(neighbors[neighbor_idx]),
                     NO_BUFFER,
                     &(recv_handles[neighbor_idx+iter_before_sync*neighbors_size])
                 );

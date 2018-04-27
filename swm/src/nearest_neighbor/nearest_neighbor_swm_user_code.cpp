@@ -3,17 +3,17 @@
 #include "boost_ptree_array_to_std_vector.h"
 extern uint64_t global_cycle;
 
-std::string GetFirstMatch(std::vector<neighbor_tuple>& neighbors, std::string lookup_name)
+std::string GetFirstMatch(std::string lookup_name)
 {
-    for(size_t s=0; s<neighbors.size(); s++) {
-         std::regex re(neighbors[s]->regex_string);
-          if(std::regex_match(lookup_name,re))
-          {
-            return neighbors[s]->name;
-          }
-       }
-     assert(0);
 
+    for(size_t s=0; s<msg_traffic_def_vector.size(); s++) {
+        std::regex re(msg_traffic_def_vector[s]->regex_string);
+        if(std::regex_match(lookup_name,re))
+        {
+        return msg_traffic_def_vector[s]->name;
+        }
+    }
+    assert(0);
 }
                                                                             
 NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
@@ -166,7 +166,7 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
         xlat_coords_to_pid(coords, neighbor_pid);
 
         std::string neighbor_string = get_neighbor_string(process_id, neighbor_pid);
-        std::string regexed_string = GetFirstMatch(neighbors, neighbor_string);
+        std::string regexed_string = GetFirstMatch(neighbor_string);
         std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
         neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
@@ -181,7 +181,7 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
             xlat_coords_to_pid(coords, neighbor_pid);
 
             std::string neighbor_string = get_neighbor_string(process_id, neighbor_pid);
-            std::string regexed_string = GetFirstMatch(neighbors, neighbor_string);
+            std::string regexed_string = GetFirstMatch(neighbor_string);
             std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
             neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );

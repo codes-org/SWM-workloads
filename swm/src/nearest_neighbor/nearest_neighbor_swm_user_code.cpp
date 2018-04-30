@@ -13,7 +13,8 @@ std::string GetFirstMatch(std::string lookup_name)
         return msg_traffic_def_vector[s]->name;
         }
     }
-    assert(0);
+    return "";
+    //assert(0);
 }
                                                                             
 NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
@@ -40,7 +41,7 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     {
         dim_product *= dimension_sizes[dim_i];
     }
-    std::cout << "dim_product is " << dim_product << " and process_cnt is " << process_cnt << std::endl;
+    //std::cout << "dim_product is " << dim_product << " and process_cnt is " << process_cnt << std::endl;
     assert(dim_product == process_cnt);
 
     req_rt = AUTOMATIC;
@@ -76,12 +77,12 @@ NearestNeighborSWMUserCode::xlat_coords_to_pid(
     pid=0;
 
     
-       std::cout << "xlat_coords_to_pid on coords ";
+    /*std::cout << "xlat_coords_to_pid on coords ";
     for(size_t coords_idx=0; coords_idx<coords.size(); coords_idx++) {
     std::cout << " " << coords[coords_idx];
     }
     std::cout << endl;
-    
+    */
 
     uint32_t dim_mult = 1;
     for(uint32_t dim_idx=0; dim_idx<dimension_cnt; dim_idx++)
@@ -167,7 +168,7 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
 
         std::string neighbor_string = get_neighbor_string(process_id, neighbor_pid);
         std::string regexed_string = GetFirstMatch(neighbor_string);
-        std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
+        //std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
         neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
 
@@ -182,7 +183,7 @@ NearestNeighborSWMUserCode::derive_neighbors_recurse(
 
             std::string neighbor_string = get_neighbor_string(process_id, neighbor_pid);
             std::string regexed_string = GetFirstMatch(neighbor_string);
-            std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
+            //std::cout << "neighbor_string is " << neighbor_string << ", regexd_string is " << regexed_string << std::endl;
 
             neighbors.push_back( std::make_tuple(neighbor_pid,regexed_string) );
         }
@@ -414,7 +415,5 @@ NearestNeighborSWMUserCode::call()
     }
 
     SWM_Finalize();
-    assert(0);
-
 }
 

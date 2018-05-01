@@ -4,7 +4,7 @@
         "size": 4096,
         "cfg": {
             "app": "nearest_neighbor",
-            "iteration_cnt": 3, 
+            "iteration_cnt": 250, 
             "compute_delay": 0,
             "noop_cnt": 0,
             "dimension_cnt": 3,

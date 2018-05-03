@@ -9,7 +9,6 @@ template <typename T> std::vector<T> boost_ptree_array_to_std_vector(boost::prop
          std::vector<T> r;
          for (auto& item : pt.get_child(key))
          {
-             cout << item.second.get_value<T>() << endl;
             r.push_back(item.second.get_value<T>());
          }
          if(r.empty()) {

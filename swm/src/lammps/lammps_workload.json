@@ -3,7 +3,7 @@
             "name": "StandaloneSWM",
             "app": "dll",
             "dll_path": "apps/dll/lammps.so",      
-            "size": 1024,
+            "size": 2048,
             "time": 0,
             "cfg":
             { 

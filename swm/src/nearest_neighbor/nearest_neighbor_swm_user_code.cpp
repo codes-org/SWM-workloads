@@ -252,13 +252,13 @@ NearestNeighborSWMUserCode::call()
             coords.clear();
             pid_again=0;
             xlat_pid_to_coords(pid, coords);
-            std::cout << "pid " << pid << " has coords.size " << coords.size() << " ";
-            for(size_t i=0; i<coords.size(); i++) {
-            std::cout << " " << coords[i];
-            }
-            std::cout << "; which have pid ";
-            xlat_coords_to_pid(coords, pid_again);
-            std::cout << pid_again << endl;
+//            std::cout << "pid " << pid << " has coords.size " << coords.size() << " ";
+//            for(size_t i=0; i<coords.size(); i++) {
+//            std::cout << " " << coords[i];
+//            }
+//            std::cout << "; which have pid ";
+//            xlat_coords_to_pid(coords, pid_again);
+//            std::cout << pid_again << endl;
         }
     }
     
@@ -292,7 +292,7 @@ NearestNeighborSWMUserCode::call()
     uint32_t iter_before_sync = 0;
     uint32_t neighbors_size=neighbors.size();
     uint32_t pkt_rsp_bytes = 0;
-    
+   
     for(uint32_t iter=0; iter<iteration_cnt; iter++)
     {
 

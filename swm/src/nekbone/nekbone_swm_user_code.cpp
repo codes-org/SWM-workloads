@@ -97,7 +97,7 @@ NEKBONESWMUserCode::NEKBONESWMUserCode(
 
     //Total number of ranks
     Rtotal = Rx*Ry*Rz;
-    std::cout << "RX: " << Rx << " | RY: " << Ry << " | RZ: " << Rz << " total=RX*RY*RZ: " << Rtotal << " vs. process_cnt: " << process_cnt << std::endl;
+//    std::cout << "RX: " << Rx << " | RY: " << Ry << " | RZ: " << Rz << " total=RX*RY*RZ: " << Rtotal << " vs. process_cnt: " << process_cnt << std::endl;
 
     assert(Rtotal == process_cnt);
 

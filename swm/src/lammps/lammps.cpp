@@ -821,7 +821,7 @@ LAMMPS_SWM::k_pre_setup(double cutoff, int rank, double f_vol)
     assert( (int)(abs(lo_out - lo_in) + 2) <=
             ((int)pppmGrid[0]/procNums[0] + (int)(double)((int)pppmGrid[0]%procNums[0])/procNums[0]*(coord[0]+1)) );
 
-    printf("\n lo_out-lo_in %d down-val %d ", lo_out - lo_in, (int)pppmGrid[0]/procNums[0] + (int)(double)((int)pppmGrid[0]%procNums[0])/procNums[0]*(coord[0]+1));
+//    printf("\n lo_out-lo_in %d down-val %d ", lo_out - lo_in, (int)pppmGrid[0]/procNums[0] + (int)(double)((int)pppmGrid[0]%procNums[0])/procNums[0]*(coord[0]+1));
 
     for(i = 0; i < k_pre_len; i++) k_pre_s_sizes[i] = int(k_pre_s_sizes[i] * msg_k_pre + 0.5);
 
@@ -1083,7 +1083,7 @@ LAMMPS_SWM::get_k_params(int rank, double f_vol)
 
     n_tr = 0;
     find_overlap(nx_in, 0, nx_fft, 0, rank, r_r, &r_len, s_r, s_rs, &s_len);
-    printf("\n r_len %d s_len %d rank %d ", r_len, s_len, rank);
+//    printf("\n r_len %d s_len %d rank %d ", r_len, s_len, rank);
     assert(r_len == s_len);
     assert(n_tr < NUM_TRANSPOSE);
     k_r_targets[n_tr] = new int[r_len];

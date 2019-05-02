@@ -1,0 +1,11 @@
+{
+    "rank_shape_2d_z": "(1024, 768, 1)", 
+        "rank_shape_2d_y": "(1024, 1, 768)", 
+        "rank_shape_2d_x": "(1, 768, 1024)", 
+        "nranks": "786432", 
+        "ng": "21504", 
+        "rank_shape_3d": "(128, 96, 64)", 
+        "box_length": "16152.5", 
+        "nthreads_per_rank": "8", 
+        "config": "CORAL_1.7M_32tiles"
+}

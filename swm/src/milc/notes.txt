@@ -1,0 +1,13 @@
+lattice/rank    msg_size
+L^4             (3/2)*L^3
+8^4		   6144
+12^4		  31104
+16^4		  98304
+24^4		 497664
+32^4		1572864
+
+
+BG/Q: typically 12^4 sites per node
+
+KNL: typically >= 24^4 sites per node
+

@@ -1,0 +1,17 @@
+{
+    "jobs": [
+    {
+        "name": "StandaloneSWM",
+            "app":  "hacc",
+            "size": 128,
+            "time": 0,
+            "cfg": {
+                "request_vc": 0,
+                "response_vc": 1,
+                "iteration_cnt": 1,
+                "gen_cfg_filename": "hacc.json"
+            }
+    }
+    ]
+}
+

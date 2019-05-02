@@ -1,0 +1,1 @@
+{"rank_shape_2d_z": "(768, 512, 1)", "rank_shape_2d_y": "(768, 1, 512)", "rank_shape_2d_x": "(1, 768, 512)", "nranks": "393216", "ng": "26112", "rank_shape_3d": "(96, 64, 64)", "box_length": "19613.75", "nthreads_per_rank": "16", "config": "CORAL_2.8M_32tiles"}

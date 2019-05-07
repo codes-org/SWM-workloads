@@ -19,7 +19,18 @@
 #ifndef _ALL_TO_ONE_TEMPLATE_USER_CODE_
 #define _ALL_TO_ONE_TEMPLATE_USER_CODE_
 
-#include "random_number_generator.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+#include <boost/foreach.hpp>
+
+#include <string>
+#include <iostream>
+#include <random>
+#include <algorithm>
+#include <vector>
+#include <regex>
+
 #include "swm-include.h"
 using namespace std;
 
@@ -44,6 +55,7 @@ protected:
     uint32_t pkt_rsp_bytes;
     uint32_t dst_rank_id;
 
+    uint32_t process_id;
     uint32_t process_cnt;
     uint32_t iteration_cnt;
     uint32_t noop_cnt;

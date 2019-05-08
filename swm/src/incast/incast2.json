@@ -1,6 +1,6 @@
 {
 "jobs" : {
-        "dll_path": "${FABSIM_APPS_PATH}/dll/nearest_neighbor.so",
+        "dll_path": "${FABSIM_APPS_PATH}/dll/incast.so",
         "size": 9,
         "cfg": {
             "app": "incast",
@@ -12,9 +12,9 @@
             "scattered_start" : false,
             "synchronous": true,
             "dst_rank_id":8,
-            "randomize_communication_order": 0,
-            "blocking_comm" : "0", 
-            "debug" : "1", 
+            "randomize_communication_order": false,
+            "blocking_comm" : false,
+            "debug" : true,
             "src_rank_id_interval": [0,7], 
             "cpu_freq" : 4e9
        }

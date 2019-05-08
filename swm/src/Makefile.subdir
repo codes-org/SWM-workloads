@@ -7,18 +7,23 @@ include_HEADERS = \
 						 src/nekbone/cubiclattice.h \
 						 src/nearest_neighbor/nearest_neighbor_swm_user_code.h \
 						 src/nearest_neighbor/boost_ptree_array_to_std_vector.h \
+						 src/incast/all_to_one_swm_user_code.h \
 						 src/milc/milc_swm_user_code.h
 
 src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
 						src/nekbone/cubiclattice.cpp	\
 						src/nekbone/nekbone_swm_user_code.cpp	\
 						src/nearest_neighbor/nearest_neighbor_swm_user_code.cpp \
+						src/incast/all_to_one_swm_user_code.cpp \
 						src/milc/milc_swm_user_code.cpp
 
 dist_data_DATA = src/lammps/lammps_workload.json \
 			  src/nearest_neighbor/skeleton.json \
 			  src/nekbone/workload.json \
 			  src/point_to_point/example.json \
+			  src/incast/incast.json \
+			  src/incast/incast1.json \
+			  src/incast/incast2.json \
 			  src/milc/milc_skeleton.json
 
 

@@ -19,6 +19,8 @@
 #ifndef _ALL_TO_ONE_TEMPLATE_USER_CODE_
 #define _ALL_TO_ONE_TEMPLATE_USER_CODE_
 
+#define SWM_APP_TAG_BASE 0
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>

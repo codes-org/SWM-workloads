@@ -4,18 +4,18 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
     boost::property_tree::ptree cfg,
     void**& generic_ptrs
 ) :
-    dst_rank_id(cfg.get<uint32_t>("dst_rank_id",0)),
-    scattered_start(cfg.get<bool>("scattered_start", false)),
-    start_delay_max(cfg.get<uint32_t>("start_delay_max", 0)),
-    synchronous(cfg.get<bool>("synchronous", 0)),
-    use_any_src(cfg.get<bool>("use_any_src", 0)),
-    blocking_comm(cfg.get<bool>("blocking_comm", 0)),
-    debug(cfg.get<bool>("debug", false))
+    dst_rank_id(cfg.get<uint32_t>("jobs.cfg.dst_rank_id",0)),
+    scattered_start(cfg.get<bool>("jobs.cfg.scattered_start", false)),
+    start_delay_max(cfg.get<uint32_t>("jobs.cfg.start_delay_max", 0)),
+    synchronous(cfg.get<bool>("jobs.cfg.synchronous", 0)),
+    use_any_src(cfg.get<bool>("jobs.cfg.use_any_src", 0)),
+    blocking_comm(cfg.get<bool>("jobs.cfg.blocking_comm", 0)),
+    debug(cfg.get<bool>("jobs.cfg.debug", false))
 {
 
     // extract the src/dst rank id intervals
     int num = 0;
-    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, cfg.get_child("src_rank_id_interval"))
+    BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, cfg.get_child("jobs.cfg.src_rank_id_interval"))
     {
         std::string value = v.second.data();
 

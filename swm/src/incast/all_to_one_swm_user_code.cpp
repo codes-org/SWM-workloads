@@ -4,6 +4,7 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
     boost::property_tree::ptree cfg,
     void**& generic_ptrs
 ) :
+    process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
     dst_rank_id(cfg.get<uint32_t>("jobs.cfg.dst_rank_id",0)),
     scattered_start(cfg.get<bool>("jobs.cfg.scattered_start", false)),
     start_delay_max(cfg.get<uint32_t>("jobs.cfg.start_delay_max", 0)),
@@ -25,7 +26,6 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
         num++;
     }
     assert(num == 2);
-
 
     assert(dst_rank_id < process_cnt);
 }
@@ -223,7 +223,5 @@ AllToOneSWMUserCode::call()
       } // end of else if(synchronous && (process_id == dst_rank_id) )
 
     SWM_Finalize();
-    assert(0);
-
 }
 

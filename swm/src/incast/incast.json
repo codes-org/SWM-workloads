@@ -13,8 +13,8 @@
             "synchronous": true,
             "dst_rank_id":8,
             "randomize_communication_order": false,
-            "blocking_comm" : false,
-            "debug" : true,
+            "blocking_comm" : false, 
+            "debug" : true, 
             "src_rank_id_interval": [0,7],
             "cpu_freq" : 4e9
        }

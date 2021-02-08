@@ -121,6 +121,9 @@ void SWM_Allreduce(
         SWM_ROUTING_TYPE reqrt,
         SWM_ROUTING_TYPE rsprt);
 
+void SWM_Mark_Iteration(
+        SWM_TAG iter_tag);
+
 void SWM_Finalize();
 
 #endif

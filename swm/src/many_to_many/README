@@ -1,0 +1,12 @@
+many_to_many SWM
+
+Each source in N sends 1 message to every destination in M, where N, M > 0.
+
+Example: For 4 processes [a, b, c, d]  where a, b are sources and c, d are detinations:
+
+a -> c
+a -> d
+b -> c
+b -> d
+
+This pattern is repeated for each iteration.

@@ -1,23 +1,19 @@
 /*
  * =====================================================================================
  *
- *       Filename:  all_to_one_swm_user_code.h
+ *       Filename:  one_to_many_swm_user_code.h
  *
  *    Description:
  *
  *        Version:  1.0
- *        Created:  12/3/2013 01:05:02 PM
- *       Revision:  none
- *       Compiler:  gcc
  *
- *         Author:  Nate Andrysco, nathan.r.andrysco@intel.com
- *        Company:  Intel
+ *         Author:  Kevin A. Brown, kabrown@anl.gov
  *
  * =====================================================================================
  */
 
-#ifndef _ALL_TO_ONE_TEMPLATE_USER_CODE_
-#define _ALL_TO_ONE_TEMPLATE_USER_CODE_
+#ifndef _ONE_TO_MANY_TEMPLATE_USER_CODE_
+#define _ONE_TO_MANY_TEMPLATE_USER_CODE_
 
 #define SWM_APP_TAG_BASE 0
 
@@ -36,12 +32,12 @@
 #include "swm-include.h"
 using namespace std;
 
-class AllToOneSWMUserCode 
+class OneToManySWMUserCode 
 {
 
 public:
 
-    AllToOneSWMUserCode(
+    OneToManySWMUserCode(
 //        SWMUserIF* user_if,
         boost::property_tree::ptree cfg,
         void**& generic_ptrs
@@ -55,7 +51,7 @@ protected:
     uint32_t msg_req_bytes;
     uint32_t msg_rsp_bytes;
     uint32_t pkt_rsp_bytes;
-    uint32_t dst_rank_id;
+    uint32_t src_rank_id;
 
     uint32_t process_id;
     uint32_t process_cnt;
@@ -66,8 +62,8 @@ protected:
     std::vector<uint32_t> req_vcs;
     std::vector<uint32_t> rsp_vcs;
 
-    uint32_t min_source_id;
-    uint32_t max_source_id;
+    uint32_t min_dst_id;
+    uint32_t max_dst_id;
 
     bool randomize_comm_order;
 

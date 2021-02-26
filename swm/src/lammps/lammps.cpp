@@ -255,6 +255,8 @@ LAMMPS_SWM::call()
 
     for(ts = 0; ts < num_timesteps; ts++)
     {
+        if(process_id == 0)
+            printf("LAMMPS Starting Timestep %d / %d\n",ts,num_timesteps);
         // initial integration
         SWM_Compute(start_cyc);
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // temperature

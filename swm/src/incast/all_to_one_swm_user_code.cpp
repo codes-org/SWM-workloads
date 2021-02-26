@@ -5,6 +5,8 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
     void**& generic_ptrs
 ) :
     process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
+    iteration_cnt(cfg.get<uint32_t>("jobs.cfg.iteration_cnt", 1)),
+    msg_size(cfg.get<uint32_t>("jobs.cfg.msg_size", 0)),
     dst_rank_id(cfg.get<uint32_t>("jobs.cfg.dst_rank_id",0)),
     scattered_start(cfg.get<bool>("jobs.cfg.scattered_start", false)),
     start_delay_max(cfg.get<uint32_t>("jobs.cfg.start_delay_max", 0)),
@@ -13,6 +15,8 @@ AllToOneSWMUserCode::AllToOneSWMUserCode(
     blocking_comm(cfg.get<bool>("jobs.cfg.blocking_comm", 0)),
     debug(cfg.get<bool>("jobs.cfg.debug", false))
 {
+
+    process_id = *((int*)generic_ptrs[0]);
 
     // extract the src/dst rank id intervals
     int num = 0;
@@ -44,14 +48,12 @@ AllToOneSWMUserCode::call()
 
   if(synchronous)
     {
-      send_handles = new uint32_t[send_limit * iteration_cnt];
+      send_handles = new uint32_t[send_limit * iteration_cnt]; 
       recv_handles = new uint32_t[recv_limit * iteration_cnt];
     }
 
-
     if ((process_id != dst_rank_id) && (process_id >= min_source_id && process_id <= max_source_id) )   // do not send messages to self
     {
-
         for(uint32_t iter=0; iter < iteration_cnt; iter++)
         {
 
@@ -108,6 +110,12 @@ AllToOneSWMUserCode::call()
                 //uint32_t send_handle[send_limit];
                 uint32_t send_count = 0;
 
+                if(debug)
+                {
+                  std::cout << "process_id: " << process_id << " sening message to destination: " << dst_rank_id << ", tag: " << this_tag << ", iter: " << iter  << std::endl;
+                }
+
+
                 if(!blocking_comm)
                   {
 
@@ -118,7 +126,7 @@ AllToOneSWMUserCode::call()
 			      -1, 
 			      -1,
                               NO_BUFFER,
-			      0, 
+			      msg_size, 
 			      0,
                               &(send_handles[send_count]),
                               0,
@@ -134,7 +142,7 @@ AllToOneSWMUserCode::call()
 			     -1,// req-vc
 			     -1, //resp-vc
                              NO_BUFFER,
-                             0, //req-bytes
+                             msg_size, //req-bytes
                              0, //resp-bytes
                              0,//routing type
                              0 //routing type

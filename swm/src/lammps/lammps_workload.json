@@ -10,7 +10,7 @@
                 "num_x_replicas": 3,
                 "num_y_replicas": 3,
                 "num_z_replicas": 3,
-                "num_time_steps": 30,
+                "num_time_steps": 1,
                 "req_vc" : 0,
                 "resp_vc" : 1,
                 "router_freq" : 800e6,

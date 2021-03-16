@@ -1,0 +1,14 @@
+{
+"jobs" : {
+        "dll_path": "${FABSIM_APPS_PATH}/dll/allreduce.so",
+        "size": 32,
+        "cfg": {
+            "app": "allreduce",
+            "iteration_cnt": 100,
+            "compute_delay": 0,
+	    "msg_req_bytes" : 8,
+            "debug" : false,
+	    "cpu_freq" : 4e9
+       }
+    }
+}

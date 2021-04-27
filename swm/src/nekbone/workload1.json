@@ -3,10 +3,10 @@
     "jobs": 
     {
         "name": "StandaloneSWM",
-            "app":  "nekbone",
             "size": 729 ,
             "time": 0,
             "cfg": { 
+                "app":  "nekbone",
                 "request_vc": 0,
                 "response_vc": 1,
                 "iteration_cnt": 1,

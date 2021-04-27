@@ -1,12 +1,12 @@
 {
     "jobs": {
             "name": "StandaloneSWM",
-            "app": "dll",
             "dll_path": "apps/dll/lammps.so",      
             "size": 2048,
             "time": 0,
             "cfg":
             { 
+                "app": "lammps",
                 "num_x_replicas": 3,
                 "num_y_replicas": 3,
                 "num_z_replicas": 3,

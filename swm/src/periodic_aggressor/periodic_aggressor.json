@@ -1,11 +1,11 @@
 {
     "jobs": {
             "name": "StandaloneSWM",
-            "app": "periodic_aggressor",
             "size": 2048,
             "time": 0,
             "cfg":
             {
+                "app": "periodic_aggressor",
                 "router_freq" : 800e6,
                 "cpu_freq" : 4e9,
                 "cpu_sim_speedup" : 1e6,

@@ -11,7 +11,8 @@ include_HEADERS = \
 						 src/spread/one_to_many_swm_user_code.h \
 						 src/many_to_many/many_to_many_swm_user_code.h \
 						 src/allreduce/allreduce.h \
-						 src/milc/milc_swm_user_code.h
+						 src/milc/milc_swm_user_code.h \
+						 src/periodic_aggressor/periodic_aggressor.h
 
 src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
 						src/nekbone/cubiclattice.cpp	\
@@ -21,7 +22,8 @@ src_libswm_la_SOURCES = src/lammps/lammps.cpp	\
 						src/spread/one_to_many_swm_user_code.cpp \
 						src/many_to_many/many_to_many_swm_user_code.cpp \
 						src/allreduce/allreduce.cpp \
-						src/milc/milc_swm_user_code.cpp
+						src/milc/milc_swm_user_code.cpp \
+						src/periodic_aggressor/periodic_aggressor.cpp
 
 dist_data_DATA = src/lammps/lammps_workload.json \
 			  src/lammps/lammps_workload1.json \
@@ -38,7 +40,8 @@ dist_data_DATA = src/lammps/lammps_workload.json \
 			  src/allreduce/allreduce_workload.json \
 			  src/allreduce/allreduce32_workload.json \
 			  src/allreduce/allreduce256_workload.json \
-			  src/milc/milc_skeleton.json
+			  src/milc/milc_skeleton.json \
+			  src/periodic_aggressor/periodic_aggressor.json
 
 
 				

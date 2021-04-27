@@ -108,7 +108,7 @@ AllToOneSWMUserCode::call()
 						-1,
 						NO_BUFFER,
 						msg_req_bytes, 
-						msg_rsp_bytes,
+						0,
 						&(send_handles[send_count]),
 						0,
 						0

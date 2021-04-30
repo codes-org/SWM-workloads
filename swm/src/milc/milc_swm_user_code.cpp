@@ -284,6 +284,8 @@ MilcSWMUserCode::call()
 		    );
     }
 
+    SWM_Mark_Iteration(iter);
+
   }
   SWM_Finalize();
 }

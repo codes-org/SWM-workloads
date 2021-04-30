@@ -188,12 +188,14 @@ void
 LAMMPS_SWM::doFFT()
 {
     uint32_t *h;
+    uint32_t *h2;
     int i = 0, idx = 0;
 
     for(idx = 0; idx < NUM_TRANSPOSE; idx++)
     {
 
         h = new uint32_t[k_len[idx]];
+        h2 = new uint32_t[k_len[idx]];
 
         SWM_Compute(k_cyc[idx]);
         for(i = 0; i < k_len[idx]; i++)
@@ -202,12 +204,24 @@ LAMMPS_SWM::doFFT()
         }
         for(i = 0; i < k_len[idx]; i++)
         {
-            SWM_Send(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i]);
+            //SWM_Send(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i]);
+            SWM_Isend(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i], 0, &h2[i]);
         }
+        SWM_Waitall(k_len[idx], h2);
         SWM_Waitall(k_len[idx], h);
 
         delete h;
+        delete h2;
     }
+    // Below for instrumentation
+//    fprintf(stderr, "\nSWMMSGS %d", process_id);
+//    for(idx = 0; idx < NUM_TRANSPOSE; idx++)
+//    {
+//        for(i = 0; i < k_len[idx]; i++)
+//	{
+//		fprintf(stderr, " %d", k_s_sizes[idx][i]);
+//	}
+//    }
 }
 
 bool
@@ -264,37 +278,53 @@ LAMMPS_SWM::call()
         if(neigh_check())
         {
             // do neighbor exchange
+//SWM_Mark_Iteration(0); // Instrumentation
             doNeighExch();
+//SWM_Mark_Iteration(10); // Instrumentation
         }
         else
         {
             // ghost forward exchange
+//SWM_Mark_Iteration(0); // Instrumentation
             doP2P(gh_fw_len, gh_fw_r_targets, gh_fw_s_targets, gh_fw_s_sizes, gh_fw_cyc);
+//SWM_Mark_Iteration(20); // Instrumentation
         }
 
         // k-space pre exchange
+//SWM_Mark_Iteration(0); // Instrumentation
         doP2P(k_pre_len, k_pre_r_targets, k_pre_s_targets, k_pre_s_sizes, k_pre_cyc);
+//SWM_Mark_Iteration(21); // Instrumentation
 
         // do FFT
+//SWM_Mark_Iteration(0); // Instrumentation
         doFFT();
+//SWM_Mark_Iteration(30); // Instrumentation
 
         // k-space post exchange
+//SWM_Mark_Iteration(0); // Instrumentation
         doP2P(k_post_len, k_post_r_targets, k_post_s_targets, k_post_s_sizes, k_post_cyc);
+//SWM_Mark_Iteration(22); // Instrumentation
 
         // energy calculation
         SWM_Compute(k_energy_cyc);
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);
 
         // ghost reverse exchange
+//SWM_Mark_Iteration(0); // Instrumentation
         doP2P(gh_rw_len, gh_rw_r_targets, gh_rw_s_targets, gh_rw_s_sizes, gh_rw_cyc);
+//SWM_Mark_Iteration(23); // Instrumentation
 
         // ghost fixed values exchange
+//SWM_Mark_Iteration(0); // Instrumentation
         doP2P(fix_len, fix_r_targets, fix_s_targets, fix_s_sizes, fix_cyc);
+//SWM_Mark_Iteration(24); // Instrumentation
 
         // final integration
         SWM_Compute(final_cyc);
         SWM_Allreduce(8, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);  // temperature
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
+
+	//SWM_Mark_Iteration(ts); // removed for instrumentation test
     }
     SWM_Finalize();
     //MM: comment assert(0);

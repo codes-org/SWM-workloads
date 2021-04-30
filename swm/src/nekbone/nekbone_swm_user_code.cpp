@@ -170,6 +170,7 @@ Err_t NEKBONESWMUserCode::run()
 {
     Err_t err=0;
 
+    uint32_t iter = 0;
     for(unsigned polyO=Pbegin; polyO<Pend; polyO+=Pstep)
     {
         if(mpiRank==0) printf("%d> polyO=%d\n", __LINE__, polyO);
@@ -212,6 +213,8 @@ Err_t NEKBONESWMUserCode::run()
 
         //NEKbone loop over element/rank removed-->}
 
+	SWM_Mark_Iteration(iter); //KB
+	iter++;
     }
 
     assert(err == 0);
@@ -695,6 +698,7 @@ Err_t NEKBONESWMUserCode::conjugateGradient()
         nek_gsop("on w");
         nek_glsc3();
         nek_glsc3();
+
     }
 
     return err;

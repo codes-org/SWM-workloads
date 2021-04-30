@@ -3,6 +3,7 @@
 
 #include <list>
 #include <boost/property_tree/ptree.hpp>
+#include <iostream>	// For printing message sizes
 #include "swm-include.h"
 // Internal LAMMPS paramenters
 // Skin cutoff for ghost neighbor exchange (on comm)

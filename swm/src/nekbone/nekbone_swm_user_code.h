@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <boost/property_tree/ptree.hpp>
 #include <stdlib.h>
+#include <iostream>	// For debugging output
 #include "swm-include.h"
 
 

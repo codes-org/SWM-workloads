@@ -188,12 +188,14 @@ void
 LAMMPS_SWM::doFFT()
 {
     uint32_t *h;
+    uint32_t *h2;
     int i = 0, idx = 0;
 
     for(idx = 0; idx < NUM_TRANSPOSE; idx++)
     {
 
         h = new uint32_t[k_len[idx]];
+        h2 = new uint32_t[k_len[idx]];
 
         SWM_Compute(k_cyc[idx]);
         for(i = 0; i < k_len[idx]; i++)
@@ -202,11 +204,14 @@ LAMMPS_SWM::doFFT()
         }
         for(i = 0; i < k_len[idx]; i++)
         {
-            SWM_Send(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i]);
+            // SWM_Send(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i]);
+            SWM_Isend(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i], 0, &h2[i]);
         }
+        SWM_Waitall(k_len[idx], h2);
         SWM_Waitall(k_len[idx], h);
 
         delete h;
+        delete h2;
     }
 }
 

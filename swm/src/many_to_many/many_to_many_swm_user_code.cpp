@@ -57,7 +57,7 @@ ManyToManySWMUserCode::call()
 	/* Print job description */
 	if(process_id == 0)
 	{
-		std::cout << std::endl << "JOB: Bulk_data | size: " << process_cnt;
+		std::cout << std::endl << "JOB: Many-to-Many (needs a better name) | size: " << process_cnt;
 		std::cout << " | interation_cnt: " << iteration_cnt;
 		std::cout << " | msg_req_bytes: " << msg_req_bytes;
 		std::cout << " | msg_rsp_bytes: " << msg_rsp_bytes;

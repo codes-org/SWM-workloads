@@ -1,0 +1,15 @@
+{
+    "jobs" : {
+            "size": 32,
+            "cfg": {
+                "app": "layered_allbcast",
+                "iteration_cnt": 10,
+                "total_layers": 50,
+                "initial_layer_size": 8192,
+                "layer_growth_rate": 1.12,
+                "grad_compression_rate": 32,
+                "debug" : true,
+                "cpu_freq" : 4e9
+           }
+        }
+    }

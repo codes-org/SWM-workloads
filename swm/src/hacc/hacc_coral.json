@@ -2,7 +2,6 @@
     "jobs": [
     {
         "name": "StandaloneSWM",
-            "app":  "hacc",
             "size": 786432,
             "time": 0,
             "placement": {
@@ -12,6 +11,7 @@
                 "weight": 1
             },
             "cfg": {
+                "app": "hacc",
                 "request_vc": 0,
                 "response_vc": 1,
                 "iteration_cnt": 1,

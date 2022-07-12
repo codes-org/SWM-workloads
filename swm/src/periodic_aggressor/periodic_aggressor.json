@@ -1,0 +1,27 @@
+{
+    "jobs": {
+            "name": "StandaloneSWM",
+            "size": 2048,
+            "time": 0,
+            "cfg":
+            {
+                "app": "periodic_aggressor",
+                "router_freq" : 800e6,
+                "cpu_freq" : 4e9,
+                "cpu_sim_speedup" : 1e6,
+                "num_x_replicas": 3,
+                "num_y_replicas": 3,
+                "num_z_replicas": 3,
+                "lammps_iters_per_iter": 1,
+                "req_vc" : 0,
+                "resp_vc" : 1,
+                "incast_size" : 100,
+                "incast_iters_per_iter" : 5,
+                "incast_dest_rank_id" : 99,
+                "incast_src_rank_id_interval": [0,98],
+                "incast_msg_req_bytes" : 1310720,
+                "incast_msg_rsp_bytes" : 0,
+                "debug" : true
+            }
+        }
+}

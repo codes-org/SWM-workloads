@@ -4,14 +4,29 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h> //memset
+#include <stdarg.h> //log printf wrapper
 
 #include "cubiclattice.h"
 
 using namespace std;
 #define CHECKERR if(err) break;
+#define STDOUT_LOG 0
 
 #define MPI_SUCCESS (1);
 typedef BUF_TYPE SWM_Request;
+
+
+
+void print_log(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    if(STDOUT_LOG)
+        vprintf(format, args);
+
+    va_end(args);
+}
 
 NEKBONESWMUserCode::NEKBONESWMUserCode(
     boost::property_tree::ptree cfg,
@@ -173,23 +188,28 @@ Err_t NEKBONESWMUserCode::run()
     uint32_t iter = 0;
     for(unsigned polyO=Pbegin; polyO<Pend; polyO+=Pstep)
     {
-        if(mpiRank==0) printf("%d> polyO=%d\n", __LINE__, polyO);
+        if(mpiRank==0) print_log("NEKbone: poly=%d/%d\n", polyO, Pend);
 
         //NEKbone loop over element/rank removed-->for(G->nelt = G->iel0; G->nelt <= G->ielN; G->nelt += G->ielD){
         //Use sizedata.h::E(x|y|z) to change the element distribution within 1 rank.
 
+        if(mpiRank==0) print_log("\tMake Mesh 1\n");
         err = makeMesh(polyO);
         assert(err == 0);
 
+        if(mpiRank==0) print_log("\tMake Mesh 2\n");
         err = makeMesh(polyO);
         assert(err == 0);
 
+        if(mpiRank==0) print_log("\tGSOP 1\n");
         err = nek_gsop("on c");
         assert(err == 0);
 
+        if(mpiRank==0) print_log("\tGSOP 2\n");
         err = nek_gsop("on f");
         assert(err == 0);
 
+        if(mpiRank==0) print_log("\tGrad Conjugation 1\n");
         err = conjugateGradient();
         assert(err == 0);
 
@@ -205,6 +225,7 @@ Err_t NEKBONESWMUserCode::run()
             rsp_rt
         );
 
+        if(mpiRank==0) print_log("\tGrad Conjugation 2\n");
         err = conjugateGradient();
         assert(err == 0);
 
@@ -694,6 +715,7 @@ Err_t NEKBONESWMUserCode::conjugateGradient()
 
     for(unsigned iter = 0; iter <CGcount; ++iter)
     {
+        if(mpiRank==0) print_log("\t\tGradient Conjugation Iteration %d/%d\n",iter,CGcount);
         nek_glsc3();
         nek_gsop("on w");
         nek_glsc3();

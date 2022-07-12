@@ -1,43 +1,56 @@
-#include <time.h>
-#include <math.h>
-#include <inttypes.h>
+#include "periodic_aggressor.h"
 
-#include "lammps.h"
+PeriodicAggressor::PeriodicAggressor(
+		boost::property_tree::ptree cfg,
+		void**& generic_ptrs
+		) :
+  // general config
+	iteration_cnt(cfg.get<uint32_t>("jobs.cfg.iteration_cnt", 1)),
+	process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
+	compute_delay(cfg.get<uint32_t>("jobs.cfg.compute_delay", 0)),
+    show_iterations(cfg.get<bool>("jobs.cfg.show_iterations", false)),
+    router_freq(cfg.get<double>("jobs.cfg.router_freq", 800e6)),
+    cpu_freq(cfg.get<double>("jobs.cfg.cpu_freq", 1.2e9)),
+    cpu_sim_speedup(cfg.get<double>("jobs.cfg.cpu_sim_speedup", 1.0)),
+	debug(cfg.get<bool>("jobs.cfg.debug", false)),
+    show_progress(cfg.get<bool>("jobs.cfg.show_progress",true)),
 
-static double round(double x, int p)
-{
-    return floor(x*pow(10,p) + 0.5)/pow(10,p);
-}
-
-/*MM: Function signature modified SWMUserIF removed. */
-LAMMPS_SWM::LAMMPS_SWM(
-    boost::property_tree::ptree cfg,
-    void**& generic_ptrs
-) :
-    process_cnt(cfg.get<uint32_t>("jobs.size", 1)),
+  //lammps config
+    lammps_iters_per_iter(cfg.get<uint32_t>("jobs.cfg.lammps_iters_per_iter", 1)),
     x_rep(cfg.get<uint32_t>("jobs.cfg.num_x_replicas", 1)),
     y_rep(cfg.get<uint32_t>("jobs.cfg.num_y_replicas", 1)),
     z_rep(cfg.get<uint32_t>("jobs.cfg.num_z_replicas", 1)),
-    num_timesteps(cfg.get<uint32_t>("jobs.cfg.num_time_steps", 100)),
-    router_freq(cfg.get<double>("jobs.cfg.router_freq", 800e6)),
-    cpu_freq(cfg.get<double>("jobs.cfg.cpu_freq", 1.2e9)),
-    cpu_sim_speedup(cfg.get<double>("jobs.cfg.cpu_sim_speedup", 1.0))
+
+  //incast config
+	incast_process_cnt(cfg.get<uint32_t>("jobs.cfg.incast_size", 1)),
+    incast_iters_per_iter(cfg.get<uint32_t>("jobs.cfg.incast_iters_per_iter",5)),
+	incast_dest_rank_id(cfg.get<uint32_t>("jobs.cfg.incast_dest_rank_id",0)),
+	incast_msg_req_bytes(cfg.get<uint32_t>("jobs.cfg.incast_msg_req_bytes", 0)),
+	incast_msg_rsp_bytes(cfg.get<uint32_t>("jobs.cfg.incast_msg_rsp_bytes", 0))
 {
+	process_id = *((int*)generic_ptrs[0]);
 
-    /*TODO MM: Figure out if we need to keep this code. 
-     * msg_traffic_desc msg_desc;
-    GetMsgDetails(&msg_desc);
+    //incast setup
+	// extract the src/dst rank id intervals
+	int num = 0;
+	BOOST_FOREACH(const boost::property_tree::ptree::value_type &v, cfg.get_child("jobs.cfg.incast_src_rank_id_interval"))
+	{
+		std::string value = v.second.data();
 
-    req_vc  = msg_desc.msg_req_vc;
-    resp_vc = msg_desc.msg_rsp_vc;
-    rsp_bytes   = msg_desc.pkt_rsp_bytes;
-    */
+		if(num == 0) incast_min_source_id = atoi(value.c_str());
+		if(num == 1) incast_max_source_id = atoi(value.c_str());
 
-    /* TODO MM changes. VCs are not required for the workload part. */
+		num++;
+	}
+	assert(num == 2);
+
+	assert(incast_dest_rank_id < incast_process_cnt);
+
+
+    //lammps setup
     req_vc = 0;
     resp_vc = 1;
     rsp_bytes = 0;
-    process_id = *((int*)generic_ptrs[0]);
 
     int i = 0;
 
@@ -79,8 +92,7 @@ LAMMPS_SWM::LAMMPS_SWM(
 
 }
 
-
-LAMMPS_SWM::~LAMMPS_SWM()
+PeriodicAggressor::~PeriodicAggressor()
 {
     int i = 0;
 
@@ -121,8 +133,182 @@ LAMMPS_SWM::~LAMMPS_SWM()
     if(neigh_b_cyc) delete neigh_b_cyc;
 }
 
+static double round(double x, int p)
+{
+    return floor(x*pow(10,p) + 0.5)/pow(10,p);
+}
+
 void
-LAMMPS_SWM::doP2P(int len, int *r_targets, int *s_targets, int *s_sizes, long *cyc_cnt)
+PeriodicAggressor::call()
+{
+    lammps_model_init();
+
+    for(uint32_t iter = 0; iter < iteration_cnt; iter++)
+    {
+        if ((debug || show_progress) && process_id == 0)
+            printf("Periodic Aggressor Iteration %d/%d\n",iter,iteration_cnt);
+        if ((debug || show_progress) && process_id == 0)
+            printf("Periodic Aggressor: Starting Lammps Phase 1\n");
+        do_lammps_phase();
+        if ((debug || show_progress) && process_id == 0)
+            printf("Periodic Aggressor: Starting Incast Phase\n");
+        SWM_Mark_Iteration(0); //entering incast
+        do_incast_phase();
+        if ((debug || show_progress) && process_id == 0)
+            printf("Periodic Aggressor: Starting Lammps Phase 2\n");
+        SWM_Mark_Iteration(1); //exiting incast
+        do_lammps_phase();
+    }
+    SWM_Finalize();
+}
+
+/* TODO (MM): Eliminate process id from the call method. */
+void
+PeriodicAggressor::do_lammps_phase()
+{
+    unsigned int ts = 0;
+
+    for(ts = 0; ts < lammps_iters_per_iter; ts++)
+    {
+        if(debug && process_id == 0)
+            printf("PA: LAMMPS Starting Timestep %d / %d\n",ts,lammps_iters_per_iter);
+        // initial integration
+        SWM_Compute(start_cyc);
+        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // temperature
+        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
+
+        // check if neighbors need to be exchanged
+        if(neigh_check())
+        {
+            // do neighbor exchange
+            doNeighExch();
+        }
+        else
+        {
+            // ghost forward exchange
+            doP2P(gh_fw_len, gh_fw_r_targets, gh_fw_s_targets, gh_fw_s_sizes, gh_fw_cyc);
+        }
+
+        // k-space pre exchange
+        doP2P(k_pre_len, k_pre_r_targets, k_pre_s_targets, k_pre_s_sizes, k_pre_cyc);
+
+        // do FFT
+        doFFT();
+
+        // k-space post exchange
+        doP2P(k_post_len, k_post_r_targets, k_post_s_targets, k_post_s_sizes, k_post_cyc);
+
+        // energy calculation
+        SWM_Compute(k_energy_cyc);
+        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);
+
+        // ghost reverse exchange
+        doP2P(gh_rw_len, gh_rw_r_targets, gh_rw_s_targets, gh_rw_s_sizes, gh_rw_cyc);
+
+        // ghost fixed values exchange
+        doP2P(fix_len, fix_r_targets, fix_s_targets, fix_s_sizes, fix_cyc);
+
+        // final integration
+        SWM_Compute(final_cyc);
+        SWM_Allreduce(8, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);  // temperature
+        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
+    }
+    //MM: comment assert(0);
+}
+
+void
+PeriodicAggressor::do_incast_phase()
+{
+
+	if(process_id == 0)
+	{
+		std::cout << std::endl << "PA: Incast | size: " << incast_process_cnt;
+		std::cout << " | incast_iters_per_iter: " << incast_iters_per_iter;
+		std::cout << " | incast_msg_req_bytes: " << incast_msg_req_bytes;
+		std::cout << " | incast_msg_rsp_bytes: " << incast_msg_rsp_bytes;
+		std::cout << " | incast_dest_rank_id: " << incast_dest_rank_id;
+		std::cout << " | src_rank_id_interval: " << incast_min_source_id << "-" << incast_max_source_id;
+	}
+	uint32_t *send_handles = NULL;
+	uint32_t *recv_handles = NULL;
+
+	uint32_t send_limit = 1;
+	uint32_t recv_limit = (incast_max_source_id - incast_min_source_id) + 1;
+
+    send_handles = new uint32_t[send_limit * incast_iters_per_iter];
+    recv_handles = new uint32_t[recv_limit * incast_iters_per_iter];
+
+	if ((process_id != incast_dest_rank_id) && (process_id >= incast_min_source_id && process_id <= incast_max_source_id) )   // do not send messages to self
+	{
+		for(uint32_t iter=0; iter < incast_iters_per_iter; iter++)
+		{
+
+			uint32_t iter_offset = (incast_process_cnt * (iter) );
+			SWM_TAG this_tag = SWM_APP_TAG_BASE + (sizeof(SWM_TAG) * ( (process_id + 1) + iter_offset) ); //(iter+1) );
+			uint32_t send_count = 0;
+
+            SWM_Isend(
+                incast_dest_rank_id,
+                SWM_COMM_WORLD,
+                this_tag,
+                -1, 
+                -1,
+                NO_BUFFER,
+                incast_msg_req_bytes, 
+                0,
+                &(send_handles[send_count]),
+                0,
+                0
+            );
+
+            SWM_Waitall(send_limit, send_handles);
+
+			if(debug)
+			{
+				std::cout << std::endl << "process_id: " << process_id << " sent message to destination: " << incast_dest_rank_id << ", tag: " << this_tag << ", iter: " << iter ;
+			}
+	    }
+    }
+
+    else if(process_id == incast_dest_rank_id)
+    {
+        // need to receive from everybody every iteration...
+        for(uint32_t iter = 0; iter < incast_iters_per_iter; iter++)
+        {
+            uint32_t count = 0;
+            for(uint32_t index = incast_min_source_id; index <= incast_max_source_id; index++, count++)
+            {
+                uint32_t iter_offset = (incast_process_cnt * (iter) );
+                SWM_TAG this_tag = SWM_APP_TAG_BASE + (sizeof(SWM_TAG) * ( (index + 1) + iter_offset) );
+                uint32_t receive_from_proc = index;
+
+                if(debug)
+                {
+                    std::cout  << std::endl << "process_id: " << process_id << " expecting to recv data from: " << receive_from_proc << " with recv tag: " << this_tag << " | iter_" << iter;
+                }
+
+                SWM_Irecv(
+                    receive_from_proc,
+                    SWM_COMM_WORLD,
+                    this_tag,
+                    NO_BUFFER,
+                    &(recv_handles[count])
+                );
+            }
+
+            SWM_Waitall(recv_limit, recv_handles);
+            if(debug)
+            {
+                std::cout << std::endl << "process_id: " << process_id << " received data from all srcs";
+            }
+        }
+    }
+}
+
+
+
+void
+PeriodicAggressor::doP2P(int len, int *r_targets, int *s_targets, int *s_sizes, long *cyc_cnt)
 {
     int i = 0;
     uint32_t h = 0;
@@ -139,7 +325,7 @@ LAMMPS_SWM::doP2P(int len, int *r_targets, int *s_targets, int *s_sizes, long *c
 }
 
 void
-LAMMPS_SWM::doNeighExch()
+PeriodicAggressor::doNeighExch()
 {
     int i = 0;
     uint32_t h = 0;
@@ -185,17 +371,15 @@ LAMMPS_SWM::doNeighExch()
 }
 
 void
-LAMMPS_SWM::doFFT()
+PeriodicAggressor::doFFT()
 {
     uint32_t *h;
-    uint32_t *h2;
     int i = 0, idx = 0;
 
     for(idx = 0; idx < NUM_TRANSPOSE; idx++)
     {
 
         h = new uint32_t[k_len[idx]];
-        h2 = new uint32_t[k_len[idx]];
 
         SWM_Compute(k_cyc[idx]);
         for(i = 0; i < k_len[idx]; i++)
@@ -204,28 +388,16 @@ LAMMPS_SWM::doFFT()
         }
         for(i = 0; i < k_len[idx]; i++)
         {
-            //SWM_Send(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i]);
-            SWM_Isend(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i], 0, &h2[i]);
+            SWM_Send(k_s_targets[idx][i], SWM_COMM_WORLD, 0, req_vc, resp_vc, NO_BUFFER, k_s_sizes[idx][i]);
         }
-        SWM_Waitall(k_len[idx], h2);
         SWM_Waitall(k_len[idx], h);
 
         delete h;
-        delete h2;
     }
-    // Below for instrumentation
-//    fprintf(stderr, "\nSWMMSGS %d", process_id);
-//    for(idx = 0; idx < NUM_TRANSPOSE; idx++)
-//    {
-//        for(i = 0; i < k_len[idx]; i++)
-//	{
-//		fprintf(stderr, " %d", k_s_sizes[idx][i]);
-//	}
-//    }
 }
 
 bool
-LAMMPS_SWM::neigh_check()
+PeriodicAggressor::neigh_check()
 {
     if(neigh_check_count < NEIGH_DELAY)
     {
@@ -260,84 +432,11 @@ LAMMPS_SWM::neigh_check()
     return false;
 }
 
-/* TODO (MM): Eliminate process id from the call method. */
-void
-LAMMPS_SWM::call()
-{
-    unsigned int ts = 0;
-    modelInit();
-
-    for(ts = 0; ts < num_timesteps; ts++)
-    {
-        if(process_id == 0)
-            printf("LAMMPS Starting Timestep %d / %d\n",ts,num_timesteps);
-        // initial integration
-        SWM_Compute(start_cyc);
-        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // temperature
-        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
-
-        // check if neighbors need to be exchanged
-        if(neigh_check())
-        {
-            // do neighbor exchange
-//SWM_Mark_Iteration(0); // Instrumentation
-            doNeighExch();
-//SWM_Mark_Iteration(10); // Instrumentation
-        }
-        else
-        {
-            // ghost forward exchange
-//SWM_Mark_Iteration(0); // Instrumentation
-            doP2P(gh_fw_len, gh_fw_r_targets, gh_fw_s_targets, gh_fw_s_sizes, gh_fw_cyc);
-//SWM_Mark_Iteration(20); // Instrumentation
-        }
-
-        // k-space pre exchange
-//SWM_Mark_Iteration(0); // Instrumentation
-        doP2P(k_pre_len, k_pre_r_targets, k_pre_s_targets, k_pre_s_sizes, k_pre_cyc);
-//SWM_Mark_Iteration(21); // Instrumentation
-
-        // do FFT
-//SWM_Mark_Iteration(0); // Instrumentation
-        doFFT();
-//SWM_Mark_Iteration(30); // Instrumentation
-
-        // k-space post exchange
-//SWM_Mark_Iteration(0); // Instrumentation
-        doP2P(k_post_len, k_post_r_targets, k_post_s_targets, k_post_s_sizes, k_post_cyc);
-//SWM_Mark_Iteration(22); // Instrumentation
-
-        // energy calculation
-        SWM_Compute(k_energy_cyc);
-        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);
-
-        // ghost reverse exchange
-//SWM_Mark_Iteration(0); // Instrumentation
-        doP2P(gh_rw_len, gh_rw_r_targets, gh_rw_s_targets, gh_rw_s_sizes, gh_rw_cyc);
-//SWM_Mark_Iteration(23); // Instrumentation
-
-        // ghost fixed values exchange
-//SWM_Mark_Iteration(0); // Instrumentation
-        doP2P(fix_len, fix_r_targets, fix_s_targets, fix_s_sizes, fix_cyc);
-//SWM_Mark_Iteration(24); // Instrumentation
-
-        // final integration
-        SWM_Compute(final_cyc);
-        SWM_Allreduce(8, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER);  // temperature
-        SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // pressure
-
-	SWM_Mark_Iteration(ts); // remove for instrumentation test
-    }
-    SWM_Finalize();
-    //MM: comment assert(0);
-}
-
-
 #pragma GCC diagnostic push
 void
-LAMMPS_SWM::modelInit()
+PeriodicAggressor::lammps_model_init()
 {
-#include "lammps_model.h"
+#include "pa_lammps_model.h"
     double t_vol, f_vol;
     int i = 0, j = 0;
 
@@ -446,7 +545,7 @@ LAMMPS_SWM::modelInit()
 #pragma GCC diagnostic pop
 
 void
-LAMMPS_SWM::proc_decomposition(int n, double prd[], int procNums[])
+PeriodicAggressor::proc_decomposition(int n, double prd[], int procNums[])
 {
     double area[3];
     double bestArea;
@@ -482,7 +581,7 @@ LAMMPS_SWM::proc_decomposition(int n, double prd[], int procNums[])
     }
 }
 void
-LAMMPS_SWM::pppm_decomposition(int n, double prd[], double pppmGrid[])
+PeriodicAggressor::pppm_decomposition(int n, double prd[], double pppmGrid[])
 {
     double h[3];
     double err;
@@ -511,9 +610,9 @@ LAMMPS_SWM::pppm_decomposition(int n, double prd[], double pppmGrid[])
 
 #pragma GCC diagnostic push
 void
-LAMMPS_SWM::ghost_setup(double cutoff, int rank, double t_vol)
+PeriodicAggressor::ghost_setup(double cutoff, int rank, double t_vol)
 {
-#include "lammps_model.h"
+#include "pa_lammps_model.h"
     int nc[3], neigh[6];
     int i = 0, ni = 0;
     double tmp_vol, max_vol;
@@ -740,9 +839,9 @@ LAMMPS_SWM::ghost_setup(double cutoff, int rank, double t_vol)
 }
 
 void
-LAMMPS_SWM::k_pre_setup(double cutoff, int rank, double f_vol)
+PeriodicAggressor::k_pre_setup(double cutoff, int rank, double f_vol)
 {
-#include "lammps_model.h"
+#include "pa_lammps_model.h"
     int neigh[6];
     int i = 0, ni = 0;
     int hi_in, hi_out, lo_in, lo_out;
@@ -866,9 +965,9 @@ LAMMPS_SWM::k_pre_setup(double cutoff, int rank, double f_vol)
 }
 
 void
-LAMMPS_SWM::k_post_setup(double cutoff, int rank, double f_vol)
+PeriodicAggressor::k_post_setup(double cutoff, int rank, double f_vol)
 {
-#include "lammps_model.h"
+#include "pa_lammps_model.h"
     int neigh[6];
     int i, ni;
     int hi_in, hi_out, lo_in, lo_out;
@@ -987,9 +1086,9 @@ LAMMPS_SWM::k_post_setup(double cutoff, int rank, double f_vol)
 
 
 void
-LAMMPS_SWM::neigh_e_setup(double cutoff, int rank, double t_vol)
+PeriodicAggressor::neigh_e_setup(double cutoff, int rank, double t_vol)
 {
-#include "lammps_model.h"
+#include "pa_lammps_model.h"
     int neigh[6];
     int i = 0, ni = 0;
 
@@ -1049,7 +1148,7 @@ LAMMPS_SWM::neigh_e_setup(double cutoff, int rank, double t_vol)
 
 
 double
-LAMMPS_SWM::pppm_estimate_ik_error(double h, double p, int n, double prd[])
+PeriodicAggressor::pppm_estimate_ik_error(double h, double p, int n, double prd[])
 {
     double q2;
     double acons[5] = {1.0/23232.0, 7601.0/13628160.0, 143.0/69120.0, 517231.0/106536960.0, 106640677.0/11737571328.0};
@@ -1066,7 +1165,7 @@ LAMMPS_SWM::pppm_estimate_ik_error(double h, double p, int n, double prd[])
 
 
 int
-LAMMPS_SWM::pppm_factorable(int n)
+PeriodicAggressor::pppm_factorable(int n)
 {
     int factors[3] = {2, 3, 5};
     int i = 0, flag = 0;
@@ -1089,9 +1188,9 @@ LAMMPS_SWM::pppm_factorable(int n)
 }
 
 void
-LAMMPS_SWM::get_k_params(int rank, double f_vol)
+PeriodicAggressor::get_k_params(int rank, double f_vol)
 {
-#include "lammps_model.h"
+#include "pa_lammps_model.h"
     int *r_r, *s_r, *s_rs;
     int r_len, s_len;
     int *nx_in, *nx_fft, *nx_mid1, *nx_mid2;
@@ -1242,7 +1341,7 @@ LAMMPS_SWM::get_k_params(int rank, double f_vol)
 #pragma GCC diagnostic pop
 
 int
-LAMMPS_SWM::find_one_overlap(int a[6], int b[6], int s[3])
+PeriodicAggressor::find_one_overlap(int a[6], int b[6], int s[3])
 {
     int r[6];
 
@@ -1265,7 +1364,7 @@ LAMMPS_SWM::find_one_overlap(int a[6], int b[6], int s[3])
 }
 
 void
-LAMMPS_SWM::find_overlap(int all_in[], int in_shift, int all_out[], int out_shift, int rank, int r_r[], int *r_len, int s_r[], int s_rs[], int *s_len)
+PeriodicAggressor::find_overlap(int all_in[], int in_shift, int all_out[], int out_shift, int rank, int r_r[], int *r_len, int s_r[], int s_rs[], int *s_len)
 {
     int i, r;
     int s[3];
@@ -1296,7 +1395,7 @@ LAMMPS_SWM::find_overlap(int all_in[], int in_shift, int all_out[], int out_shif
 }
 
 void
-LAMMPS_SWM::get_nx_in(int rank, int nx[10])
+PeriodicAggressor::get_nx_in(int rank, int nx[10])
 {
     int coord[3];
 
@@ -1315,7 +1414,7 @@ LAMMPS_SWM::get_nx_in(int rank, int nx[10])
 }
 
 void
-LAMMPS_SWM::get_nx_fft(int rank, int nx[10])
+PeriodicAggressor::get_nx_fft(int rank, int nx[10])
 {
     int py, pz, me_y, me_z;
 
@@ -1345,7 +1444,7 @@ LAMMPS_SWM::get_nx_fft(int rank, int nx[10])
 }
 
 void
-LAMMPS_SWM::get_nx_mid1(int rank, int nx[10])
+PeriodicAggressor::get_nx_mid1(int rank, int nx[10])
 {
     int f1, f2;
     int ip1, ip2;
@@ -1368,7 +1467,7 @@ LAMMPS_SWM::get_nx_mid1(int rank, int nx[10])
 }
 
 void
-LAMMPS_SWM::get_nx_mid2(int rank, int nx[10])
+PeriodicAggressor::get_nx_mid2(int rank, int nx[10])
 {
     int f1, f2;
     int ip1, ip2;
@@ -1393,7 +1492,7 @@ LAMMPS_SWM::get_nx_mid2(int rank, int nx[10])
 
 
 void
-LAMMPS_SWM::best_2d_mapping(int *px, int *py, int nx, int ny)
+PeriodicAggressor::best_2d_mapping(int *px, int *py, int nx, int ny)
 {
     int bestsurf, bestboxx, bestboxy;
     int boxx, boxy, surf;
@@ -1431,7 +1530,7 @@ LAMMPS_SWM::best_2d_mapping(int *px, int *py, int nx, int ny)
 }
 
 void
-LAMMPS_SWM::bifactor(int n, int *f1, int *f2)
+PeriodicAggressor::bifactor(int n, int *f1, int *f2)
 {
     *f1 = int(sqrt(n));
     while(*f1 > 0)
@@ -1443,7 +1542,7 @@ LAMMPS_SWM::bifactor(int n, int *f1, int *f2)
 }
 
 void
-LAMMPS_SWM::rank_to_xyz(int rank, int coord[3])
+PeriodicAggressor::rank_to_xyz(int rank, int coord[3])
 {
     coord[0] = rank / procNums[2] / procNums[1] % procNums[0];
     coord[1] = rank / procNums[2] % procNums[1];
@@ -1451,7 +1550,7 @@ LAMMPS_SWM::rank_to_xyz(int rank, int coord[3])
 }
 
 int
-LAMMPS_SWM::xyz_to_rank(int coord[3])
+PeriodicAggressor::xyz_to_rank(int coord[3])
 {
     int mods[3];
     int i = 0;
@@ -1464,7 +1563,7 @@ LAMMPS_SWM::xyz_to_rank(int coord[3])
 }
 
 void
-LAMMPS_SWM::rank_to_neigh(int rank, int neighs[6])
+PeriodicAggressor::rank_to_neigh(int rank, int neighs[6])
 {
     int coord[3];
     int tmp_coord[3];
@@ -1497,4 +1596,11 @@ LAMMPS_SWM::rank_to_neigh(int rank, int neighs[6])
 }
 
 
-//DLL_POSTAMBLE(LAMMPS_SWM)
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ * End:
+ *
+ * vim: ft=c ts=8 sts=4 sw=4 expandtab
+ */

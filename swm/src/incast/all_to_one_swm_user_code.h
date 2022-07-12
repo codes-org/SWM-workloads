@@ -56,6 +56,8 @@ protected:
     uint32_t msg_rsp_bytes;
     uint32_t pkt_rsp_bytes;
     uint32_t dst_rank_id;
+    uint32_t msg_size; // MM addition
+
 
     uint32_t process_id;
     uint32_t process_cnt;

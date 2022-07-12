@@ -1,0 +1,22 @@
+{
+"jobs" : {
+        "dll_path": "${FABSIM_APPS_PATH}/dll/incast.so",
+        "size": 100,
+        "cfg": {
+            "app": "incast",
+            "iteration_cnt": 150, 
+            "compute_delay": 0,
+            "noop_cnt": 0,
+            "msg_size": 13107200,
+            "start_delay_max" : 0,
+            "scattered_start" : false,
+            "synchronous": true,
+            "dst_rank_id":99,
+            "randomize_communication_order": false,
+            "blocking_comm" : false, 
+            "debug" : true, 
+            "src_rank_id_interval": [0,98],
+            "cpu_freq" : 4e9
+       }
+    }
+}

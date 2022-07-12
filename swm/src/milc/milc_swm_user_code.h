@@ -33,6 +33,7 @@
 #include <random>
 #include <algorithm>
 #include <vector>
+#include <iostream>	// for debugging output
 
 #include "swm-include.h"
 

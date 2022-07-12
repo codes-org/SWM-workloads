@@ -29,7 +29,7 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     msg_size(cfg.get<uint32_t>("jobs.cfg.msg_size", 0)),
     dimension_sizes(boost_ptree_array_to_std_vector<uint32_t>(cfg,"jobs.cfg.dimension_sizes", {0})),
                 max_dimension_distance(cfg.get<uint32_t>("jobs.cfg.max_dimension_distance",0)),
-                synchronous(cfg.get<bool>("jobs.cfg.synchronous",false)),
+                synchronous(cfg.get<bool>("jobs.cfg.synchronous",true)),
                 iterations_per_sync(cfg.get<uint32_t>("jobs.cfg.iterations_per_sync",1)),
                 randomize_communication_order(cfg.get<bool>("jobs.cfg.randomize_communication_order",false))
 {
@@ -47,6 +47,13 @@ NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     req_rt = AUTOMATIC;
     rsp_rt = AUTOMATIC;
 
+    if (synchronous == false)
+        printf("SWM Nearest Neighbor - Warning: configuring 'synchronous == false' currently generates no traffic\n");
+
+    if (randomize_communication_order && process_id == 0)
+    {
+        printf("SWM Nearest Neighbor - Warning: configuring 'randomize_communication_order == true' will generate nondeterminstic results.\n");
+    }
 }
 
 void
@@ -280,13 +287,17 @@ NearestNeighborSWMUserCode::call()
     }
     */
 
-    uint32_t* send_handles = NULL;
-    uint32_t* recv_handles = NULL;
+    // uint32_t* send_handles = NULL;
+    // uint32_t* recv_handles = NULL;
+    uint32_t* all_handles = NULL;
+    size_t num_handles_per_sync = 0;
 
     if(synchronous)
     {
-        send_handles = new uint32_t[neighbors.size()*iterations_per_sync];
-        recv_handles = new uint32_t[neighbors.size()*iterations_per_sync];
+        // send_handles = new uint32_t[neighbors.size()*iterations_per_sync];
+        // recv_handles = new uint32_t[neighbors.size()*iterations_per_sync];
+        all_handles = new uint32_t[neighbors.size()*iterations_per_sync * 2];
+        num_handles_per_sync = neighbors.size() *  iterations_per_sync * 2;
     }
 
     uint32_t iter_before_sync = 0;
@@ -295,26 +306,29 @@ NearestNeighborSWMUserCode::call()
    
     for(uint32_t iter=0; iter<iteration_cnt; iter++)
     {
+        if(process_id == 0)
+            printf("Nearest Neighbor Starting Iteration %d / %d\n",iter,iteration_cnt);
 
         //shuffle the neighbors
+        /*NM: This is a source of nondeterminism depending on how std::rand() is implemented
+              even between two sequential runs. Maybe a possible source of unmatched isends/irecv in optimistic mode*/
         if(randomize_communication_order)
         {
-//            auto rng = std::default_random_engine {};
             std::random_shuffle(neighbors.begin(), neighbors.end());
         }
 
         //send to each neighbor
         for(size_t neighbor_idx=0; neighbor_idx<neighbors.size(); neighbor_idx++)
         {
-
-            //msg_traffic_desc msg_desc;
-
-            //GetMsgDetails(&msg_desc, std::get<1>(neighbors[neighbor_idx]));
-
-            if(synchronous)
-            {
-
+            if (synchronous) {
                 //send/recv pair that we'll later wait on
+                SWM_Irecv(
+                    std::get<0>(neighbors[neighbor_idx]),
+                    SWM_COMM_WORLD,
+                    std::get<0>(neighbors[neighbor_idx]),
+                    NO_BUFFER,
+                    &(all_handles[neighbor_idx+iter_before_sync*neighbors_size+(neighbors_size*iterations_per_sync*0)])
+                );
 
                 SWM_Isend(
                     std::get<0>(neighbors[neighbor_idx]),
@@ -325,32 +339,22 @@ NearestNeighborSWMUserCode::call()
                     NO_BUFFER,
                     msg_size, //msg_desc.msg_req_bytes,
                     pkt_rsp_bytes, //msg_desc.pkt_rsp_bytes,
-                    &(send_handles[neighbor_idx+iter_before_sync*neighbors_size]),
+                    &(all_handles[neighbor_idx+iter_before_sync*neighbors_size+(neighbors_size*iterations_per_sync*1)]),
                     0,
                     0
                 );
-
-                SWM_Irecv(
-                    std::get<0>(neighbors[neighbor_idx]),
-                    SWM_COMM_WORLD,
-                    std::get<0>(neighbors[neighbor_idx]),
-                    NO_BUFFER,
-                    &(recv_handles[neighbor_idx+iter_before_sync*neighbors_size])
-                );
                 for(uint32_t noop=0; noop<noop_cnt; noop++)
                 {
-		  assert(0); // Does CODES have an equivalent of a NOOP?
-		  //SWM_Noop();
+                    assert(0); // Does CODES have an equivalent of a NOOP?
+                    //SWM_Noop();
                 }
-
             }
             else
             {
-
                 //fire and forget
-	      // purposes of the paper lets just use Isend/Irecv
-	      assert(0);
-	      /*
+	            // purposes of the paper lets just use Isend/Irecv
+	            assert(0);
+	            /*
                 SWM_Synthetic(
                     std::get<0>(neighbors[neighbor_idx]),  //dst
                     0,
@@ -372,48 +376,30 @@ NearestNeighborSWMUserCode::call()
                 {
                     SWM_Noop();
                 }
-
-		*/
-
+		        */
             }
-
         }
-
-        if(synchronous)
-        {
-
-
+        if (synchronous) {
             iter_before_sync++;
             if(iter_before_sync == iterations_per_sync || iter == iteration_cnt-1 )
             {
                 //std::cout << "begin wait at time: " << global_cycle << std::endl;
                 SWM_Waitall(
-                    neighbors.size()*iter_before_sync,
-                    send_handles
-                );
-
-                SWM_Waitall(
-                    neighbors.size()*iter_before_sync,
-                    recv_handles
+                    num_handles_per_sync,
+                    all_handles
                 );
                 iter_before_sync = 0;
                 //std::cout << "end wait at time: " << global_cycle << std::endl;
             }
-
-
         }
         else
         {
-
             if (compute_delay)
             {
                 SWM_Compute(compute_delay);
             }
-
         }
-
     }
-
     SWM_Finalize();
 }
 

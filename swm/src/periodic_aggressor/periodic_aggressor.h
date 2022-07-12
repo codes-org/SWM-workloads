@@ -1,10 +1,26 @@
-#ifndef _LAMMPS_
-#define _LAMMPS_
+/*
+ * =====================================================================================
+ *
+ *       Filename:  all_to_one_swm_user_code.h
+ *
+ *    Description:
+ *
+ *        Version:  1.0
+ *        Created:  12/3/2013 01:05:02 PM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Nate Andrysco, nathan.r.andrysco@intel.com
+ *        Company:  Intel
+ *
+ * =====================================================================================
+ */
 
-#include <list>
-#include <boost/property_tree/ptree.hpp>
-#include <iostream>	// For printing message sizes
-#include "swm-include.h"
+#ifndef _PERIODIC_AGGRESSOR_H
+#define _PERIODIC_AGGRESSOR_H
+
+#define SWM_APP_TAG_BASE 0
+
 // Internal LAMMPS paramenters
 // Skin cutoff for ghost neighbor exchange (on comm)
 #define GHOST_SKIN_CUTOFF 12.0
@@ -30,36 +46,72 @@
 // number of allreduces at the end of neighbor exchange
 #define NUM_NEIGH_ALLREDUCE 5
 
-
 #define PI 3.14159265358979323846
 
 
-class LAMMPS_SWM 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/foreach.hpp>
+
+#include <list>
+#include <string>
+#include <iostream>
+#include <random>
+#include <algorithm>
+#include <vector>
+#include <regex>
+
+#include "swm-include.h"
+using namespace std;
+
+class PeriodicAggressor 
 {
+
 public:
 
-    LAMMPS_SWM(
-
-        //SWMUserIF* user_if,
+    PeriodicAggressor(
+//        SWMUserIF* user_if,
         boost::property_tree::ptree cfg,
         void**& generic_ptrs
     );
-    ~LAMMPS_SWM();
+    ~PeriodicAggressor();
+
     void call();
+    void do_lammps_phase();
+    void do_incast_phase();
 
 protected:
-    uint32_t x_rep;      // number of replicas in X dimension
-    uint32_t y_rep;      // number of replicas in Y dimension
-    uint32_t z_rep;      // number of replicas in Z dimension
-    uint32_t num_timesteps; // number of time steps to simulate
-    uint32_t req_vc;        // request vc
-    uint32_t resp_vc;       // response vc
+    //general config
+    uint32_t process_cnt;
+    uint32_t iteration_cnt;
+    uint32_t compute_delay;
+    uint32_t process_id;
     double router_freq;     // router frequency in Hz
     double cpu_freq;        // CPU frequency in Hz
     double cpu_sim_speedup; // simulation speedup factor (makes CPU faster)
-    uint32_t rsp_bytes;
-    uint32_t process_cnt; // MM addition
-    int process_id; //MM addition
+    
+    bool show_iterations;
+    bool debug;
+    bool show_progress;
+
+    //lammps phase config
+    uint32_t lammps_iters_per_iter; // number of time steps to simulate
+    uint32_t x_rep;      // number of replicas in X dimension
+    uint32_t y_rep;      // number of replicas in Y dimension
+    uint32_t z_rep;      // number of replicas in Z dimension
+    uint32_t req_vc;     //not configurable
+    uint32_t resp_vc;    //not configurable
+    uint32_t rsp_bytes;  //not configurable
+
+    //incast phase config
+    uint32_t incast_process_cnt;
+    uint32_t incast_iters_per_iter;
+    uint32_t incast_msg_req_bytes;
+    uint32_t incast_msg_rsp_bytes;
+    uint32_t incast_min_source_id;
+    uint32_t incast_max_source_id;
+    uint32_t incast_dest_rank_id;
+
+
 
 private:
     double prd[3];
@@ -124,7 +176,7 @@ private:
     long k_energy_cyc;
     long final_cyc;
 
-    void modelInit();
+    void lammps_model_init();
     void doP2P(int len, int *r_targets, int *s_targets, int *s_sizes, long *cyc_cnt);
     void doNeighExch();
     void doFFT();
@@ -160,7 +212,7 @@ private:
     void rank_to_xyz(int rank, int coord[3]);
     int xyz_to_rank(int coord[3]);
     void rank_to_neigh(int rank, int neighs[6]);
-};
 
+};
 
 #endif

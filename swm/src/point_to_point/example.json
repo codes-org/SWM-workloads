@@ -2,10 +2,10 @@
     "jobs": [
         {
             "name": "job1",
-            "app":  "point_to_point",
             "size": 128,
             "time": 0,
             "cfg": { 
+                "app":  "point_to_point",
                 "iteration_cnt":    1,
                 "num_vcs":          8,
                 "msg_req_bytes":    2,

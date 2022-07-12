@@ -1,0 +1,22 @@
+{
+"jobs" : {
+        "dll_path": "${FABSIM_APPS_PATH}/dll/spread.so",
+        "size": 64,
+        "cfg": {
+            "app": "spread",
+            "iteration_cnt": 50,
+            "compute_delay": 10000,
+            "msg_req_bytes": 8,
+            "msg_rsp_bytes": 8,
+            "start_delay_max" : 10000,
+            "scattered_start" : false,
+            "src_rank_id":63,
+            "randomize_communication_order": false,
+            "blocking_comm" : false, 
+            "debug" : false, 
+            "dst_rank_id_interval": [0,62],
+	    "show_iterations": true,
+            "cpu_freq" : 4e9
+       }
+    }
+}

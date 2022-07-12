@@ -4,7 +4,7 @@
         "size": 4096,
         "cfg": {
             "app": "nearest_neighbor",
-            "iteration_cnt": 50, 
+            "iteration_cnt": 1, 
             "compute_delay": 0,
             "noop_cnt": 0,
             "dimension_cnt": 3,
@@ -12,7 +12,7 @@
             "msg_size": 32768,
             "max_dimension_distance": 3,
             "synchronous": true,
-            "randomize_communication_order": 1,
+            "randomize_communication_order": 0,
             "cpu_freq" : 4e9
        }
     }

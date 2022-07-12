@@ -52,7 +52,7 @@ void LayeredAllBroadcast::call()
 			if (process_id == 0) print_log("LayeredAllBcast Layer %d Weights\n",i);
 			execute_weights_comm(i);
 		}
-		SWM_Allreduce(32, 0, SWM_COMM_WORLD, -1, -1, NO_BUFFER, NO_BUFFER);
+		// SWM_Allreduce(32, 0, SWM_COMM_WORLD, -1, -1, NO_BUFFER, NO_BUFFER);
 		// SWM_Barrier(SWM_COMM_WORLD, -1, -1, NO_BUFFER, 0, 0, 0, 0);
 		if (process_id == 0) print_log("LayeredAllBcast Iteration %d/%d Completed\n",iter+1,iteration_cnt);
 

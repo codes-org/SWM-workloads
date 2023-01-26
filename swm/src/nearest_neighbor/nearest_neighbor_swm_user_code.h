@@ -32,8 +32,6 @@
 
 #include "swm-include.h"
 
-using namespace std;
-
 typedef std::tuple<uint32_t, std::string> neighbor_tuple;
 
 typedef uint32_t RoutingType;
@@ -71,16 +69,16 @@ typedef struct msg_traffic_desc {
   uint32_t msg_req_vc;
   uint32_t msg_rsp_vc;
   uint32_t pkt_rsp_vc;
-  
+
   /*
   #ifdef FABSIM_EMULATION
   stl_l2_encoding l2_encoding;
   std::vector<uint32_t> dlid_xors;
-  
+
   uint32_t dlid_xor;
   #endif
   */
-  
+
 } msg_traffic_desc;
 
 
@@ -99,8 +97,6 @@ public:
     regex_string(regex_string)
   {}
 };
-
-std::vector<msg_traffic_set*> msg_traffic_def_vector; // MM addition: normally part of base class
 
 class NearestNeighborSWMUserCode
 {
@@ -138,7 +134,7 @@ protected:
     int process_id; //MM addition
     int req_rt; // MM addition
     int rsp_rt; // MM addition
-    
+
     uint32_t dimension_cnt;
     std::vector<uint32_t> dimension_sizes;
     uint32_t max_dimension_distance;

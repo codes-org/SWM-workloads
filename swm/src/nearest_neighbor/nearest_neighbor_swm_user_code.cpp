@@ -3,6 +3,8 @@
 #include "boost_ptree_array_to_std_vector.h"
 extern uint64_t global_cycle;
 
+std::vector<msg_traffic_set*> msg_traffic_def_vector; // MM addition: normally part of base class
+
 std::string GetFirstMatch(std::string lookup_name)
 {
 
@@ -16,7 +18,7 @@ std::string GetFirstMatch(std::string lookup_name)
     return "";
     //assert(0);
 }
-                                                                            
+
 NearestNeighborSWMUserCode::NearestNeighborSWMUserCode(
     boost::property_tree::ptree cfg,
     void**& generic_ptrs
@@ -83,7 +85,7 @@ NearestNeighborSWMUserCode::xlat_coords_to_pid(
 
     pid=0;
 
-    
+
     /*std::cout << "xlat_coords_to_pid on coords ";
     for(size_t coords_idx=0; coords_idx<coords.size(); coords_idx++) {
     std::cout << " " << coords[coords_idx];
@@ -251,7 +253,7 @@ void
 NearestNeighborSWMUserCode::call()
 {
 
-    
+
     if(process_id == 0) {   //lets print every pid in coords and back again
     std::vector<uint32_t> coords;
         uint32_t pid_again;
@@ -268,7 +270,7 @@ NearestNeighborSWMUserCode::call()
 //            std::cout << pid_again << endl;
         }
     }
-    
+
 
     std::vector<uint32_t> my_coords;
     std::vector<uint32_t> neighbor_pids;
@@ -303,7 +305,7 @@ NearestNeighborSWMUserCode::call()
     uint32_t iter_before_sync = 0;
     uint32_t neighbors_size=neighbors.size();
     uint32_t pkt_rsp_bytes = 0;
-   
+
     for(uint32_t iter=0; iter<iteration_cnt; iter++)
     {
         if(process_id == 0)

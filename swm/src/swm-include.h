@@ -22,7 +22,14 @@ typedef int BUF_TYPE;
 typedef int SWM_UNKNOWN;
 typedef const char* SWM_UNKNOWN2;
 
+struct swm_app_data {
+    int final_iteration; // id for final iteration
+};
+
 void SWM_Init();
+
+// Call function before first UNION_MPI call that produces any packets. This function will store the information about the application into a space Union can check and respond from.
+void SWM_Pass_app_data(struct swm_app_data *);
 
 /*
  * peer: the receiving peer id 

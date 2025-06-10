@@ -267,6 +267,12 @@ LAMMPS_SWM::call()
     unsigned int ts = 0;
     modelInit();
 
+    struct swm_app_data app_data = {
+        .final_iteration = num_timesteps-1
+    };
+
+    SWM_Pass_app_data(&app_data);
+
     for(ts = 0; ts < num_timesteps; ts++)
     {
         if(process_id == 0)

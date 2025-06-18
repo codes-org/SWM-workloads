@@ -1,9 +1,8 @@
 #ifndef SWM_INCLUDE_H
 #define SWM_INCLUDE_H
 
-#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define SWM_COMM_WORLD 0
 #define NO_BUFFER 0

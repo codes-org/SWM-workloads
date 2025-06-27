@@ -268,15 +268,15 @@ LAMMPS_SWM::call()
     modelInit();
 
     struct swm_app_data app_data = {
-        .final_iteration = num_timesteps-1
+        .final_iteration = (int) num_timesteps-1
     };
 
     SWM_Pass_app_data(&app_data);
 
     for(ts = 0; ts < num_timesteps; ts++)
     {
-        if(process_id == 0)
-            printf("LAMMPS Starting Timestep %d / %d\n",ts,num_timesteps);
+        //if(process_id == 0)
+        //    printf("LAMMPS Starting Timestep %d / %d\n", ts+1, num_timesteps);
         // initial integration
         SWM_Compute(start_cyc);
         SWM_Allreduce(48, rsp_bytes, SWM_COMM_WORLD, req_vc, resp_vc, NO_BUFFER, NO_BUFFER); // temperature

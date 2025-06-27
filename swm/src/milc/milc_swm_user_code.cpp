@@ -236,9 +236,9 @@ MilcSWMUserCode::call()
   uint32_t pkt_rsp_bytes = 0;
 
   for(uint32_t iter=0; iter<iteration_cnt; iter++) {
-    if (process_id == 0) {
-      printf("MILC: Iteration %d/%d\n",iter+1,iteration_cnt);
-    }
+    //if (process_id == 0) {
+    //  printf("MILC: Iteration %d/%d\n",iter+1,iteration_cnt);
+    //}
 
     //shuffle the neighbors
     if(randomize_communication_order) {

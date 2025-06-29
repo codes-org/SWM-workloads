@@ -27,7 +27,7 @@ struct swm_app_data {
 
 void SWM_Init();
 
-// Call function before first UNION_MPI call that produces any packets. This function will store the information about the application into a space Union can check and respond from.
+// Call function before the first SWM call that produces any packets. This function will store the information about the application into a space CODES can check and respond from.
 void SWM_Pass_app_data(struct swm_app_data *);
 
 /*

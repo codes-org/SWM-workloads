@@ -1,4 +1,5 @@
 #include "milc_swm_user_code.h"
+#include <climits>
 
 template <typename T>
 std::vector<T> boost_ptree_array_to_std_vector(boost::property_tree::ptree const& pt, boost::property_tree::ptree::key_type const& key, std::vector<T> def, bool disallow_empty_arrays=true)
@@ -208,6 +209,10 @@ MilcSWMUserCode::call()
     }
   }
   */
+  struct swm_app_data app_data = {
+    .final_iteration = std::min(static_cast<int>(iteration_cnt - 1), INT_MAX),
+  };
+  SWM_Pass_app_data(&app_data);
 
   std::vector<uint32_t> my_coords;
   //std::vector<uint32_t> neighbor_pids;
@@ -231,7 +236,9 @@ MilcSWMUserCode::call()
   uint32_t pkt_rsp_bytes = 0;
 
   for(uint32_t iter=0; iter<iteration_cnt; iter++) {
-    printf("MILC: Iteration %d/%d\n",iter,iteration_cnt);
+    //if (process_id == 0) {
+    //  printf("MILC: Iteration %d/%d\n",iter+1,iteration_cnt);
+    //}
 
     //shuffle the neighbors
     if(randomize_communication_order) {

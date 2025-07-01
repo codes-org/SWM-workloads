@@ -1,9 +1,8 @@
 #ifndef SWM_INCLUDE_H
 #define SWM_INCLUDE_H
 
-#include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define SWM_COMM_WORLD 0
 #define NO_BUFFER 0
@@ -22,7 +21,14 @@ typedef int BUF_TYPE;
 typedef int SWM_UNKNOWN;
 typedef const char* SWM_UNKNOWN2;
 
+struct swm_app_data {
+    int final_iteration; // id for final iteration
+};
+
 void SWM_Init();
+
+// Call function before the first SWM call that produces any packets. This function will store the information about the application into a space CODES can check and respond from.
+void SWM_Pass_app_data(struct swm_app_data *);
 
 /*
  * peer: the receiving peer id 
